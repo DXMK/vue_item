@@ -1,0 +1,427 @@
+<script>
+/*
+ * @Author: Your name
+ * @Date:   2020-12-10 13:40:46
+ * @Last Modified by:   Your name
+ * @Last Modified time: 2020-12-10 14:16:42
+ */
+</script>
+<template>
+  <div class="page-container">
+    <div class="table-list-search">
+      <el-form ref="listQuery" :model="listQuery" inline size="mini">
+        <el-form-item label="主要服务分所" prop="companyName">
+          <el-input v-model="listQuery.companyName" />
+        </el-form-item>
+        <el-form-item label="专家姓名" prop="companyName">
+          <el-input v-model="listQuery.companyName" />
+        </el-form-item>
+        <el-form-item label="电话" prop="companyName">
+          <el-input v-model="listQuery.companyName" />
+        </el-form-item>
+        <el-form-item label="主要研究方向" prop="companyName">
+          <el-input v-model="listQuery.companyName" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="el-icon-search">查询</el-button>
+          <el-button @click="listQueryReset">重置</el-button>
+        </el-form-item>
+        <!-- <el-form-item class="table-search-button">
+          <el-button type="primary" size="small" icon="el-icon-edit" @click="handelAdd">新增</el-button>
+        </el-form-item> -->
+      </el-form>
+    </div>
+    <!--新增-->
+    <div class="table-list">
+      <el-table
+        v-loading="listLoading"
+        :data="list"
+        border
+        element-loading-text="给我一点时间"
+        fit
+        highlight-current-row
+        stripe
+        header-row-class-name="table-header"
+        size="small"
+        max-height="420"
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+      >
+        <!-- v-loading="listLoading" -->
+        <el-table-column type="index" :index="typeIndex" label="序号" fixed="left" align="center" />
+        <el-table-column prop="serverBranch" label="主要服务分所" align="center" />
+        <el-table-column prop="oneType" label="所在行业（政府预算支出功能分类）一级分类" align="center" />
+        <el-table-column prop="twoType" label="所在行业（政府预算支出功能分类）二级分类" align="center" />
+        <el-table-column prop="kind" label="所在行业（国民经济行业分类）门类" align="center" />
+        <el-table-column prop="broadClass" label="所在行业（国民经济行业分类）大类" align="center" />
+        <el-table-column prop="professorLevel" label="专家级别" align="center" />
+        <el-table-column prop="serverLevel" label="服务等级评定" align="center" />
+        <el-table-column prop="professorName" label="姓名" align="center" />
+        <el-table-column prop="cardId" label="身份证号" align="center" />
+        <el-table-column prop="professorTitle" label="职称" align="center" />
+        <el-table-column prop="education" label="学历" align="center" />
+        <el-table-column prop="academy" label="院校" align="center" />
+        <el-table-column prop="phone" label="电话、邮箱" align="center" />
+        <el-table-column prop="pro" label="常住地（行政地区）省" align="center" />
+        <el-table-column prop="city" label="常住地（行政地区）市" align="center" />
+        <el-table-column prop="area" label="常住地（行政地区）区县" align="center" />
+        <el-table-column prop="direction" label="主要研究方向" align="center" />
+        <el-table-column prop="production" label="主要著作" align="center" />
+        <el-table-column prop="result" label="课题成果" align="center" />
+        <el-table-column prop="projectAccount" label="参与所内项目数" align="center" />
+        <el-table-column align="center" label="操作" width="150" fixed="right">
+          <template>
+            <!-- <el-button
+              size="small"
+              plain
+              type="primary"
+            >修改</el-button> -->
+            <el-button
+              size="small"
+              plain
+              type="primary"
+            >详情</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <!-- <div class="pagination-container">
+      <el-pagination
+        background
+        :current-page="listQuery.current"
+        :page-sizes="[10,20,30, 50]"
+        :page-size="listQuery.size"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div> -->
+    <el-dialog
+      width="75%"
+      class="dialog"
+      title="新增"
+      :close-on-click-modal="false"
+      :visible.sync="addShow"
+      @close="closeDialog"
+    >
+      <div class="dialog-body">
+        <el-form
+          :model="addForm"
+          size="small"
+          label-width="300px"
+          :label-position="center"
+        >
+          <el-row>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="主要服务分所">
+                <el-input />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="24">
+              <el-form-item label="所在行业（政府预算支出功能分类）一级分类">
+                <el-input />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="24">
+              <el-form-item label="所在行业（政府预算支出功能分类）二级分类">
+                <el-input />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="24">
+              <el-form-item label="所在行业（国民经济行业分类）门类">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="24">
+              <el-form-item label="所在行业（国民经济行业分类）大类">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="专家级别">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="服务等级评定">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="姓名">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="身份证号">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="职称">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="学历">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="院校">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="电话、邮箱">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="常住地（行政地区）省">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="常住地（行政地区）市">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="常住地（行政地区）区县">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="主要研究方向">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="主要著作">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="课题成果">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="参与所内项目数">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addShow = false">取 消</el-button>
+        <el-button type="warning" @click="holdSave">暂 存</el-button>
+        <el-button type="primary" @click="submitSave">提 交</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import { tableListMixin, globalMixin } from '@/utils/mixin'
+export default {
+  name: 'ApprovalApply',
+  mixins: [tableListMixin, globalMixin],
+  data() {
+    return {
+      listQuery: {
+        current: 1,
+        size: 10
+      },
+      parentListQuery: {
+        current: 1,
+        size: 10
+      },
+      list: [{
+        serverBranch: '天津分所',
+        oneType: '一般公共服务',
+        twoType: '政协事务',
+        kind: '公共管理、社会保障和社会组织',
+        broadClass: '人民政协、民主党派',
+        professorLevel: '教授',
+        serverLevel: 'A',
+        professorName: '胡长飞',
+        cardId: '110101196503076336',
+        professorTitle: '正高',
+        education: '博士',
+        academy: '复旦大学',
+        phone: '13587234544',
+        pro: '北京市',
+        city: '朝阳区',
+        area: '朝外街道',
+        direction: '政协事务',
+        production: '',
+        result: '',
+        projectAccount: '15'
+      }, {
+        serverBranch: '浙江分所',
+        oneType: '交通运输',
+        twoType: '民用航空运输',
+        kind: '交通运输、仓储和邮政业',
+        broadClass: '航空运输业',
+        professorLevel: '教授级高级工程师',
+        serverLevel: 'A',
+        professorName: '程映雪',
+        cardId: '140105198403076873',
+        professorTitle: '正高',
+        education: '博士',
+        academy: '南京大学',
+        phone: '13687263095',
+        pro: '浙江省',
+        city: '杭州市',
+        area: '西湖区',
+        direction: '民用航空运输',
+        production: '',
+        result: '',
+        projectAccount: '2'
+      }, {
+        serverBranch: '天津分所',
+        oneType: '农林水事务',
+        twoType: '林业',
+        kind: '农、林、牧、渔业',
+        broadClass: '农业',
+        professorLevel: '研究员',
+        serverLevel: 'A',
+        professorName: '邹刚',
+        cardId: '41010219710307574X',
+        professorTitle: '正高',
+        education: '博士',
+        academy: '厦门大学',
+        phone: '13587263096',
+        pro: '北京市',
+        city: '东城区',
+        area: '东华门街道',
+        direction: '林业',
+        production: '',
+        result: '',
+        projectAccount: '22'
+      }, {
+        serverBranch: '北京分所',
+        oneType: '科学技术',
+        twoType: '技术研究与开发',
+        kind: '科学研究和技术服务业',
+        broadClass: '研究和试验发展',
+        professorLevel: '研究员',
+        serverLevel: 'A',
+        professorName: '罗琴',
+        cardId: '11010119650307105X',
+        professorTitle: '正高',
+        education: '博士',
+        academy: '复旦大学',
+        phone: '13387298023',
+        pro: '天津市',
+        city: '和平区',
+        area: '小白楼街道',
+        direction: '技术研究与开发',
+        production: '',
+        result: '',
+        projectAccount: '12'
+      }, {
+        serverBranch: '北京分所',
+        oneType: '工业商业金融等事务',
+        twoType: '制造业',
+        kind: '制造业',
+        broadClass: '农副食品加工业',
+        professorLevel: '高级工程师',
+        serverLevel: 'A',
+        professorName: '吴伯宁',
+        cardId: '620102196203071134',
+        professorTitle: '副高',
+        education: '研究生',
+        academy: '中国科学技术大学',
+        phone: '13587263098',
+        pro: '湖北省',
+        city: '武汉市',
+        area: '武昌区',
+        direction: '制造业',
+        production: '',
+        result: '',
+        projectAccount: '1'
+      }, {
+        serverBranch: '浙江分所',
+        oneType: '交通运输',
+        twoType: '民用航空运输',
+        kind: '交通运输、仓储和邮政业',
+        broadClass: '航空运输业',
+        professorLevel: '教授级高级工程师',
+        serverLevel: 'A',
+        professorName: '韩同兵',
+        cardId: '440103197003078195',
+        professorTitle: '正高',
+        education: '博士',
+        academy: '浙江大学',
+        phone: '13587263099',
+        pro: '安徽省',
+        city: '合肥市',
+        area: '蜀山区',
+        direction: '民用航空运输',
+        production: '',
+        result: '',
+        projectAccount: '3'
+      }],
+      total: 1,
+      parentTotal: null,
+      addShow: false,
+      addChildShow: false,
+      title: '',
+      addForm: {
+        companyType: 1
+      }
+    }
+  },
+  methods: {
+    // 获取列表
+    getList() {},
+    // 搜索
+    onSeaech() {},
+    // 重置
+    listQueryReset() {
+      this.$refs['listQuery'].resetFields()
+    },
+    handelAdd() {
+      this.title = '新增'
+      this.addShow = true
+      this.addForm.companyType = ''
+    },
+    closeDialog() {
+      this.$refs['addForm'].resetFields()
+    },
+    timeAdd() {
+      console.log(this.addForm.childProjectArr)
+      if (this.addForm.childProjectArr.length > 4) {
+        this.$message({
+          type: 'warning',
+          message: '最多设置5个子项目!'
+        })
+        return false
+      }
+      const timepart = {
+        childProjectName: '',
+        childProjectNo: ''
+      }
+      this.addForm.childProjectArr.push(timepart)
+    },
+    creatChildProject(index, row) {
+      this.addChildShow = true
+    },
+    holdSave() {
+      this.addChildShow = false
+      this.addShow = false
+    },
+    submitSave() {
+      this.addChildShow = false
+      this.addShow = false
+    }
+  }
+}
+</script>
+<style rel="stylesheet/less" lang="less" scoped>
+
+</style>

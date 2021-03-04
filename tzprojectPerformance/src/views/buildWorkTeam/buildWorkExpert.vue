@@ -1,0 +1,1535 @@
+<script>
+/*
+ * @Author: 张涛
+ * @Date:   2020-12-02 09:59:11
+ * @Last Modified by:   Your name
+ * @Last Modified time: 2021-01-27 11:05:30
+ */
+</script>
+<template>
+  <div class="page-container">
+    <div class="table-list-search">
+      <el-form ref="listQuery" :model="listQuery" inline size="mini">
+        <!-- <el-form-item label="项目编号" prop="companyName">
+          <el-input v-model="listQuery.companyName" />
+        </el-form-item> -->
+        <!-- <el-form-item label="工作组名称">
+          <el-input v-model="listQuery.clientCode" />
+        </el-form-item>
+        <el-form-item label="工作组编号">
+          <el-input v-model="listQuery.clientName" />
+        </el-form-item> -->
+        <el-form-item label="项目名称" prop="companyName">
+          <el-input v-model="listQuery.companyName" />
+        </el-form-item>
+        <el-form-item label="风险级别" prop="companyName">
+          <el-select v-model="listQuery.companyName">
+            <el-option label="A" :value="1">A</el-option>
+            <el-option label="B" :value="2">B</el-option>
+            <el-option label="C" :value="3">C</el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button size="mini" type="primary" icon="el-icon-search">查 询</el-button>
+          <el-button size="mini" @click="listQueryReset">重 置</el-button>
+        </el-form-item>
+        <el-form-item class="table-search-button">
+          <el-button type="primary" size="mini" icon="el-icon-edit" @click="professorAdd">组建专家组</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+    <div class="table-list">
+      <el-table
+        v-loading="listLoading"
+        :data="list"
+        border
+        element-loading-text="给我一点时间"
+        fit
+        highlight-current-row
+        stripe
+        header-row-class-name="table-header"
+        size="small"
+        max-height="420"
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+      >
+        <!-- v-loading="listLoading" -->
+        <el-table-column type="index" :index="typeIndex" label="序号" fixed="left" align="center" />
+        <!-- <el-table-column prop="workGroupName" label="工作组名称" align="center" />
+        <el-table-column prop="workGroupNo" label="工作组编号" align="center" /> -->
+        <el-table-column prop="projectName" label="项目名称" width="" align="left" />
+        <el-table-column prop="partner" label="项目负责合伙人" width="110" align="center" />
+        <el-table-column prop="projectManager" label="项目经理" width="100" align="center" />
+        <!-- <el-table-column prop="projectAid" label="项目秘书" align="center" /> -->
+        <el-table-column prop="projectOutLeader" label="项目外勤主管" width="100" align="center" />
+        <!-- <el-table-column prop="projectOutCrew" label="项目组员" align="center" /> -->
+        <!-- <el-table-column prop="projectNo" label="项目编号" width="100" align="center" /> -->
+        <!-- <el-table-column prop="clientName" label="客户名称" align="center" /> -->
+        <el-table-column prop="riskLevel" label="风险级别" width="100" align="center">
+          <template slot-scope="scope">
+            <span v-if="scope.row.riskLevel==1">A</span>
+            <span v-if="scope.row.riskLevel==2">B</span>
+            <span v-if="scope.row.riskLevel==3">C</span>
+          </template>
+        </el-table-column>
+        <!-- <el-table-column prop="childProjectNo" label="子项目编号" width="110" align="center" />
+        <el-table-column prop="childProjectName" label="子项目名称" width="110" align="center" />  -->
+        <!-- <el-table-column prop="status" label="是否已组建" align="center">
+          <template slot-scope="scope">
+            <span v-if="scope.row.status==1">已组建</span>
+            <span v-if="scope.row.status==2">未组建</span>
+          </template>
+        </el-table-column> -->
+        <!-- <el-table-column prop="buildMan" label="组建人" align="center" /> -->
+        <el-table-column prop="buildTime" label="组建时间" width="140" align="center" />
+        <el-table-column align="center" label="操作" width="150" fixed="right">
+          <template slot-scope="scope">
+            <el-button
+              size="mini"
+              plain
+              type="primary"
+              @click="professorUpdate(scope.$index, scope.row)"
+            >修改</el-button>
+            <el-button
+              size="mini"
+              plain
+              type="primary"
+              @click="handleDetail(scope.$index, scope.row)"
+            >详情</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <!-- <div class="pagination-container">
+      <el-pagination
+        background
+        :current-page="listQuery.current"
+        :page-sizes="[10,20,30, 50]"
+        :page-size="listQuery.size"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div> -->
+    <!--项目信息-->
+    <el-dialog
+      width="90%"
+      class="dialog"
+      title="专家组组建信息"
+      :close-on-click-modal="false"
+      :visible.sync="buildShow"
+      @close="closeDialog"
+    >
+      <div class="dialog-body">
+        <el-tabs type="border-card">
+          <el-tab-pane label="组建工作组">
+            <div class="table-list">
+              <el-table
+                v-loading="listLoading"
+                :data="projectList"
+                border
+                element-loading-text="给我一点时间"
+                fit
+                highlight-current-row
+                stripe
+                header-row-class-name="table-header"
+                size="small"
+                max-height="420"
+                style="width: 100%"
+                @selection-change="handleSelectionChange"
+              >
+                <el-table-column
+                  type="index"
+                  :index="typeIndex"
+                  label="序号"
+                  fixed="left"
+                  align="center"
+                />
+                <el-table-column prop="projectNo" label="项目编号" align="center" />
+                <el-table-column prop="projectName" label="项目名称" align="center" />
+                <el-table-column prop="clientName" label="客户名称" align="center" />
+                <el-table-column prop="riskLevel" label="风险级别" width="80" align="center">
+                  <template slot-scope="scope">
+                    <span
+                      v-if="scope.row.riskLevel === 1"
+                    >A</span>
+                    <span
+                      v-if="scope.row.riskLevel === 2"
+                    >B</span>
+                    <span
+                      v-if="scope.row.riskLevel === 3"
+                    >C</span>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="isBuild" label="是否已组建" width="120" align="center">
+                  <template slot-scope="scope">
+                    <span v-if="scope.row.isBuild === 1">已组建</span>
+                    <span v-if="scope.row.isBuild === 2">未组建</span>
+                  </template>
+                </el-table-column>
+                <el-table-column align="center" label="操作" fixed="right" width="110">
+                  <template slot-scope="scope">
+                    <el-button
+                      v-if="scope.row.isBuild === 2"
+                      size="small"
+                      plain
+                      type="primary"
+                      @click="creatProjectGroup(scope.$index, scope.row)"
+                    >组 建</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </el-tab-pane>
+          <el-tab-pane label="查看组建记录">
+            <div class="table-list">
+              <el-table
+                v-loading="listLoading"
+                :data="groupList"
+                border
+                element-loading-text="给我一点时间"
+                fit
+                highlight-current-row
+                stripe
+                header-row-class-name="table-header"
+                size="small"
+                max-height="420"
+                style="width: 100%"
+                @selection-change="handleSelectionChange"
+              >
+                <el-table-column
+                  type="index"
+                  :index="typeIndex"
+                  label="序号"
+                  fixed="left"
+                  align="center"
+                />
+                <el-table-column prop="workGroupName" label="工作组名称" align="center" />
+                <el-table-column prop="workGroupNo" label="工作组编号" align="center" />
+                <el-table-column prop="buildMan" label="组建人" width="" align="center" />
+                <el-table-column prop="buildTime" label="组建时间" align="center" />
+              </el-table>
+            </div>
+          </el-tab-pane>
+        </el-tabs>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="buildShow = false">关 闭</el-button>
+      </span>
+    </el-dialog>
+    <!--专家信息-->
+    <el-dialog
+      width="96%"
+      class="dialog"
+      title="专家信息"
+      :close-on-click-modal="false"
+      :visible.sync="addShow"
+      @close="closeDialog"
+    >
+      <div class="dialog-body">
+        <el-form :model="addForm" size="small" label-width="140px" label-position="center">
+          <el-collapse v-model="activeName" accordion>
+            <el-collapse-item title="工作组信息" name="1">
+              <el-row>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="项目名称">
+                    <el-input
+                      v-model="addForm.projectName"
+                      placeholder="由客户名称带出"
+                      disabled="disabled"
+                    />
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="项目编号">
+                    <el-input
+                      v-model="addForm.projectNo"
+                      disabled="disabled"
+                    />
+                  </el-form-item>
+                </el-col>
+                <!-- <el-col :sm="24" :md="12">
+              <el-form-item label="客户名称">
+                <el-input v-model="addForm.clientName" placeholder="请输入内容" disabled />
+              </el-form-item>
+            </el-col> -->
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="业务类型">
+                    <el-input value="非鉴证业务-政务软件服务-软件定制开发" disabled />
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="风险级别">
+                    <el-select v-model="addForm.riskLevel" disabled>
+                      <el-option label="A" :value="1" />
+                      <el-option label="B" :value="2" />
+                      <el-option label="C" :value="3" />
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="预算支出功能分类">
+                    <el-input v-model="addForm.functionClassify" placeholder="请输入内容" disabled />
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="项目四级分类">
+                    <el-select v-model="addForm.projectType" disabled>
+                      <el-option label="财政评价项目" :value="1" selected="selected">财政评价项目</el-option>
+                      <el-option label="部门评价项目" :value="2">部门评价项目</el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="24">
+                  <el-form-item label="国民经济行业分类">
+                    <el-input v-model="addForm.ecoClassify" placeholder="请输入内容" disabled />
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="项目负责合伙人">
+                    <el-input v-model="addForm.partner" disabled />
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="项目经理">
+                    <el-input v-model="addForm.projectManager" disabled />
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="项目秘书">
+                    <el-input v-model="addForm.projectAid" disabled />
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="项目外勤主管">
+                    <el-input v-model="addForm.projectOutLeader" disabled />
+                  </el-form-item>
+                </el-col>
+                <el-col>
+                  <el-form-item label="被评价单位名称" />
+                </el-col>
+                <table class="detail-table" style="margin-bottom:18px;">
+                  <tr>
+                    <td>序号</td>
+                    <td>被评价单位名称</td>
+                    <td>工作联系人</td>
+                    <td>联系方式</td>
+                    <!-- <td>操作</td> -->
+                  </tr>
+                  <tr v-for="(item, index) in addForm.linkmanArr" :key="item.linkmanId">
+                    <td>{{ index + 1 }}</td>
+                    <td><el-input v-model="item.companyName" readonly /></td>
+                    <td><el-input v-model="item.linkmanName" readonly /></td>
+                    <td><el-input v-model="item.linkmanPhone" readonly /></td>
+                    <!-- <td><el-button type="danger" icon="el-icon-delete" circle @click="partReduce" /></td> -->
+                  </tr>
+                </table>
+                <!-- <el-col :sm="24" :md="24">
+                  <el-form-item label="项目基本情况">
+                    <el-input type="textarea" :rows="3" placeholder="请输入" />
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="24">
+                  <el-form-item label="绩效评价目标">
+                    <el-input type="textarea" :rows="3" placeholder="请输入" />
+                  </el-form-item>
+                </el-col> -->
+              </el-row>
+              <!-- </el-collapse-item> -->
+              <!-- <el-row>
+            <strong>工作联系人信息</strong>
+          </el-row>
+          <el-divider />
+          <el-row>
+            <el-col :xs="24" class="btn" style="text-align:right; margin-bottom:10px;">
+              <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="linkmanAdd">添加一行</el-button>
+            </el-col>
+            <table class="detail-table">
+              <tr>
+                <td>序号</td>
+                <td>工作联系人姓名</td>
+                <td>工作联系人联系方式</td>
+                <td>操作</td>
+              </tr>
+              <tr v-for="(item, index) in addForm.linkmanArr" :key="item.linkmanId">
+                <td>{{ index + 1 }}</td>
+                <td><el-input /></td>
+                <td><el-input /></td>
+                <td><el-button type="danger" icon="el-icon-delete" circle @click="linkmanReduce" /></td>
+              </tr>
+            </table>
+          </el-row> -->
+              <!-- <el-collapse-item name="2" title="工作组信息"> -->
+              <el-row>
+                <!-- <el-col :sm="24" :md="12">
+              <el-form-item label="工作组名称">
+                <el-input v-model="detailForm.workGroupName" disabled />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="工作组编号">
+                <el-input v-model="detailForm.workGroupNo" disabled />
+              </el-form-item>
+            </el-col> -->
+                <el-col>
+                  <el-form-item label="项目组员" />
+                </el-col>
+                <table class="detail-table">
+                  <tr>
+                    <td>序号</td>
+                    <td>员工编号</td>
+                    <td>姓名</td>
+                    <td>所内级别</td>
+                    <!-- <td>操作</td> -->
+                  </tr>
+                  <tr v-for="(item, index) in addForm.staffArr" :key="item.linkmanId">
+                    <td>{{ index + 1 }}</td>
+                    <td><el-input v-model="item.staffNo" readonly /></td>
+                    <td><el-input v-model="item.staffName" /></td>
+                    <td><el-input v-model="item.staffLevel" /></td>
+                    <!-- <td><el-button type="danger" icon="el-icon-delete" circle @click="partReduce" /></td> -->
+                  </tr>
+                </table>
+                <!-- <el-col :sm="24" :md="12">
+              <el-form-item label="组建人">
+                <el-input v-model="detailForm.buildMan" disabled />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="组建时间">
+                <el-input v-model="detailForm.buildTime" disabled />
+              </el-form-item>
+            </el-col> -->
+              </el-row>
+            </el-collapse-item>
+            <!-- <el-row>
+            <strong>工作任务信息</strong>
+          </el-row>
+          <el-divider />
+          <el-row>
+            <el-col :sm="24" :md="24">
+              <el-col :xs="24" class="btn" style="text-align:right; margin-bottom:10px;">
+                <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="partAdd">添加一行</el-button>
+              </el-col>
+              <table class="detail-table">
+                <tr>
+                  <td>序号</td>
+                  <td>工作任务名称</td>
+                  <td>持续时间</td>
+                  <td>任务工期</td>
+                  <td>任务负责人</td>
+                  <td>操作</td>
+                </tr>
+                <tr v-for="(item, index) in addForm.linkmanArr" :key="item.linkmanId">
+                  <td>{{ index + 1 }}</td>
+                  <td><el-input /></td>
+                  <td><el-date-picker
+                    v-model="value1"
+                    type="datetimerange"
+                    range-separator="至"
+                    start-placeholder="开始日期"
+                    end-placeholder="结束日期"
+                  /></td>
+                  <td><el-input /></td>
+                  <td><el-input placeholder="点击选择指定" readonly="true" @focus="chooseClerk" /></td>
+                  <td><el-button type="danger" icon="el-icon-delete" circle @click="partReduce" /></td>
+                </tr>
+              </table>
+            </el-col>
+          </el-row> -->
+            <el-collapse-item title="绩效工作任务信息" name="2">
+              <el-row>
+                <!-- <el-col :sm="24" :md="24">
+              <table class="detail-table">
+                <tr>
+                  <td>序号</td>
+                  <td>员工编号</td>
+                  <td>员工姓名</td>
+                  <td>项目角色</td>
+                  <td>工作任务</td>
+                </tr>
+                <tr v-for="(item, index) in peopleArr" :key="item.peopleName">
+                  <td>{{ index + 1 }}</td>
+                  <td>{{ item.peopleNo }}</td>
+                  <td>{{ item.peopleName }}</td>
+                  <td>{{ item.peopleRole }}</td>
+                  <td><el-input type="text" /></td>
+                </tr>
+              </table>
+            </el-col> -->
+                <!-- <el-col :xs="24" class="btn" style="text-align:right; margin-bottom:10px;">
+                  <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="taskpartAdd">添加一行</el-button>
+                </el-col> -->
+                <table class="detail-table">
+                  <tr>
+                    <td>序号</td>
+                    <td>工作任务描述</td>
+                    <!-- <td>持续时间</td> -->
+                    <td>任务工期</td>
+                    <!-- <td>任务执行人</td>
+                    <td>任务调整</td> -->
+                    <!-- <td>操作</td> -->
+                  </tr>
+                  <tr v-for="(item, index) in addForm.workTaskArr" :key="item.id">
+                    <td>{{ index + 1 }}</td>
+                    <td>
+                      <el-select v-model="item.taskDesc">
+                        <el-option value="1" label="资料清单收集">资料清单收集</el-option>
+                        <el-option value="2" label="编制工作方案">编制工作方案</el-option>
+                        <el-option value="3" label="资料归档">资料归档</el-option>
+                      </el-select>
+                    </td>
+                    <!-- <td><el-date-picker
+                      v-model="item.continueTime"
+                      type="datetimerange"
+                      readonly
+                      range-separator="至"
+                      start-placeholder="开始时间"
+                      end-placeholder="结束时间"
+                    /></td> -->
+                    <td><el-input v-model="item.taskTime" :readonly="true" placeholder="后台配置带出" /></td>
+                    <!-- <td><el-input placeholder="点击选择指定" readonly="true" @focus="chooseClerk" /></td>
+                    <td><el-input /></td> -->
+                    <!-- <td><el-button type="danger" icon="el-icon-delete" circle @click="taskpartReduce" /></td> -->
+                  </tr>
+                </table>
+              </el-row>
+              <el-row>
+                <el-col :xs="24" class="btn" style="margin:18px 0">
+                  <span>绩效评价调研提纲</span>
+                  <!-- <el-button style="float:right;" type="primary" size="small" icon="el-icon-circle-plus" @click="outlinepartAdd">添加一行</el-button> -->
+                </el-col>
+                <table class="detail-table">
+                  <tr>
+                    <td width="5%">序号</td>
+                    <td>提纲名称</td>
+                    <!-- <td width="7%">操作</td> -->
+                  </tr>
+                  <tr v-for="(item, index) in addForm.outlineArr" :key="item.id">
+                    <td>{{ index + 1 }}</td>
+                    <td><el-input v-model="item.outlineName" readonly /></td>
+                    <!-- <td><el-button type="danger" icon="el-icon-delete" circle @click="outlinepartReduce" /></td> -->
+                  </tr>
+                </table>
+              </el-row>
+              <el-row>
+                <!-- <el-col :xs="24" class="btn" style="text-align:right; margin-bottom:10px;">
+                  <el-button type="primary" size="small" icon="el-icon-circle-plus" @click="letterpartAdd">添加一行</el-button>
+                </el-col>
+                <table class="detail-table">
+                  <tr>
+                    <td>序号</td>
+                    <td>调研函名称</td>
+                    <td>操作</td>
+                  </tr>
+                  <tr v-for="(item, index) in addForm.letterArr" :key="item.id">
+                    <td>{{ index + 1 }}</td>
+                    <td><el-input /></td>
+                    <td><el-button type="danger" icon="el-icon-delete" circle @click="letterpartReduce" /></td>
+                  </tr>
+                </table> -->
+                <div>
+                  <div style="margin:18px 0">绩效评价调研函</div>
+                  <tinymce v-model="addForm.content" :height="400" />
+                </div>
+              </el-row>
+            </el-collapse-item>
+            <el-collapse-item title="专家组信息" name="3">
+              <el-row>
+                <el-col :xs="24" class="btn" style="text-align:right; margin-bottom:10px;">
+                  <!-- <el-button type="primary" size="small" icon="el-icon-circle-plus-outline" @click="partAdd">添加一行</el-button> -->
+                  <el-button type="primary" style="margin-right:20px;" size="small" icon="el-icon-download" @click="testclick">选择专家</el-button>
+                </el-col>
+                <div style="width:1250px;overflow:auto;">
+                  <table class="detail-table professorTable">
+                    <tr>
+                      <td>序号</td>
+                      <td>主要服务分所</td>
+                      <td>所在行业（政府预算支出功能分类）一级分类</td>
+                      <td>所在行业（政府预算支出功能分类）二级分类</td>
+                      <td>所在行业（国民经济行业分类）门类</td>
+                      <td>所在行业（国民经济行业分类）大类</td>
+                      <td>专家级别</td>
+                      <td>服务等级评定</td>
+                      <td>姓名</td>
+                      <td>身份证号</td>
+                      <td>职称</td>
+                      <td>学历</td>
+                      <td>院校</td>
+                      <td>电话、邮箱</td>
+                      <td>常住地（行政地区）省</td>
+                      <td>常住地（行政地区）市</td>
+                      <td>常住地（行政地区）区县</td>
+                      <td>主要研究方向</td>
+                      <td>主要著作</td>
+                      <td>课题成果</td>
+                      <td>参与所内项目数</td>
+                      <td>是否开放系统账号</td>
+                      <td>账号</td>
+                      <td>密码</td>
+                      <td>账号有效期</td>
+                      <!-- <td>账号到期处理方式</td> -->
+                      <td>专家权限设置</td>
+                      <td>操作</td>
+                    </tr>
+                    <tr v-for="(item, index) in addForm.professorArr" :key="item.professorName">
+                      <td>{{ index + 1 }}</td>
+                      <td width=""><el-input /></td>
+                      <td width=""><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td width="15%">
+                        <template>
+                          <el-radio-group v-model="item.isOpen">
+                            <el-radio :label="1">是</el-radio>
+                            <el-radio :label="2">否</el-radio>
+                          </el-radio-group>
+                        </template>
+                      </td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-input placeholder="" /></td>
+                      <td><el-date-picker
+                        v-model="value1"
+                        type="datetimerange"
+                        range-separator="至"
+                        start-placeholder="开始日期"
+                        end-placeholder="结束日期"
+                      />
+                      </td>
+                      <!-- <td width="15%">
+                        <template>
+                          <el-radio-group v-model="item.isOpen">
+                            <el-radio :label="1" style="color:red;">彻底删除</el-radio>
+                            <el-radio :label="2" style="color:blue;">临时关闭</el-radio>
+                          </el-radio-group>
+                        </template>
+                      </td> -->
+                      <td>
+                        <el-tree
+                          :data="propData"
+                          :props="props"
+                          show-checkbox
+                        />
+                      </td>
+                      <td><el-button type="danger" icon="el-icon-delete" circle @click="partReduce" /></td>
+                    </tr>
+                  </table>
+                </div>
+              </el-row>
+            </el-collapse-item>
+          </el-collapse>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addShow = false">取 消</el-button>
+        <el-button type="warning" @click="holdSave">暂 存</el-button>
+        <el-button type="primary" @click="submitSave">提 交</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog
+      width="90%"
+      class="dialog"
+      title="专家库信息"
+      :close-on-click-modal="false"
+      :visible.sync="addFrameShow"
+      @close="closeDialog"
+    >
+      <div class="dialog-body">
+        <el-form :model="addForm" size="small" label-width="120px" label-position="center">
+          <el-table
+            v-loading="listLoading"
+            :data="professorList"
+            border
+            element-loading-text="给我一点时间"
+            fit
+            highlight-current-row
+            stripe
+            header-row-class-name="table-header"
+            size="small"
+            max-height="420"
+            style="width: 100%"
+            @selection-change="handleSelectionChange"
+          >
+            <el-table-column type="selection" width="55" fixed="left" align="center" />
+            <el-table-column type="index" :index="typeIndex" label="序号" fixed="left" align="center" />
+            <el-table-column prop="serverBranch" label="主要服务分所" align="center" />
+            <el-table-column prop="oneType" label="所在行业（政府预算支出功能分类）一级分类" align="center" />
+            <el-table-column prop="twoType" label="所在行业（政府预算支出功能分类）二级分类" align="center" />
+            <el-table-column prop="kind" label="所在行业（国民经济行业分类）门类" align="center" />
+            <el-table-column prop="broadClass" label="所在行业（国民经济行业分类）大类" align="center" />
+            <el-table-column prop="professorLevel" label="专家级别" align="center" />
+            <el-table-column prop="serverLevel" label="服务等级评定" align="center" />
+            <el-table-column prop="professorName" label="姓名" align="center" />
+            <el-table-column prop="cardId" label="身份证号" align="center" />
+            <el-table-column prop="professorTitle" label="职称" align="center" />
+            <el-table-column prop="education" label="学历" align="center" />
+            <el-table-column prop="academy" label="院校" align="center" />
+            <el-table-column prop="phone" label="电话、邮箱" align="center" />
+            <el-table-column prop="pro" label="常住地（行政地区）省" align="center" />
+            <el-table-column prop="city" label="常住地（行政地区）市" align="center" />
+            <el-table-column prop="area" label="常住地（行政地区）区县" align="center" />
+            <el-table-column prop="direction" label="主要研究方向" align="center" />
+            <el-table-column prop="production" label="主要著作" align="center" />
+            <el-table-column prop="result" label="课题成果" align="center" />
+            <el-table-column prop="projectAccount" label="参与所内项目数" align="center" />
+          </el-table>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addFrameShow = false">取 消</el-button>
+        <!-- <el-button type="warning" @click="holdSave">暂 存</el-button> -->
+        <el-button type="primary" @click="submitSave">确 认</el-button>
+      </span>
+    </el-dialog>
+    <!-- 详情弹窗 -->
+    <el-dialog
+      width="96%"
+      class="dialog"
+      title="详情"
+      :visible.sync="detailShow"
+    >
+      <div class="dialog-body" style="display:flex;">
+        <div style="flex:4;width:75%;">
+          <el-form :model="detailForm" size="small" label-width="140px" label-position="center">
+            <el-row>
+              <strong>项目信息</strong>
+            </el-row>
+            <el-divider />
+            <el-row>
+              <el-form-item label="项目名称">
+                <el-col :span="18">
+                  <el-input v-model="detailForm.projectName" disabled />
+                </el-col>
+              </el-form-item>
+              <el-form-item label="项目编号">
+                <el-col :span="18">
+                  <el-input v-model="detailForm.projectNo" disabled />
+                </el-col>
+              </el-form-item>
+              <!-- <el-form-item label="客户名称">
+                <el-col :span="18">
+                  <el-input v-model="detailForm.clientName" disabled />
+                </el-col>
+              </el-form-item> -->
+              <el-form-item label="业务类型">
+                <el-col :span="18">
+                  <el-input value="非鉴证业务-政务软件服务-软件定制开发" disabled />
+                </el-col>
+              </el-form-item>
+              <el-form-item label="风险级别">
+                <el-col :span="18">
+                  <el-select v-model="detailForm.riskLevel" disabled>
+                    <el-option label="A" :value="1" />
+                    <el-option label="B" :value="2" />
+                    <el-option label="C" :value="3" />
+                  </el-select>
+                </el-col>
+              </el-form-item>
+              <!-- <el-form-item label="项目属性">
+                <el-col :span="18">
+                  <el-input disabled placeholder="信息从管理平台带出" />
+                </el-col>
+              </el-form-item> -->
+              <el-col :sm="24" :md="24">
+                <el-form-item label="项目四级分类">
+                  <el-select>
+                    <el-option label="财政评价项目" :value="1" selected="selected">财政评价项目</el-option>
+                    <el-option label="部门评价项目" :value="2">部门评价项目</el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-form-item label="预算支出功能分类">
+                <el-col :span="18">
+                  <el-input v-model="detailForm.functionClassify" disabled />
+                </el-col>
+              </el-form-item>
+              <el-form-item label="国民经济行业分类">
+                <el-col :span="18">
+                  <el-input v-model="detailForm.ecoClassify" disabled />
+                </el-col>
+              </el-form-item>
+              <el-col>
+                <el-form-item label="被评价单位" />
+              </el-col>
+              <table class="detail-table" style="margin-bottom:18px;">
+                <tr>
+                  <td>序号</td>
+                  <td>被评价单位名称</td>
+                  <td>工作联系人</td>
+                  <td>联系方式</td>
+                  <!-- <td>操作</td> -->
+                </tr>
+                <tr v-for="(item, index) in detailForm.linkmanArr" :key="item.linkmanId">
+                  <td>{{ index + 1 }}</td>
+                  <td><el-input v-model="item.companyName" readonly /></td>
+                  <td><el-input /></td>
+                  <td><el-input /></td>
+                  <!-- <td><el-button type="danger" icon="el-icon-delete" circle @click="partReduce" /></td> -->
+                </tr>
+              </table>
+            </el-row>
+            <el-row>
+              <strong>工作组信息</strong>
+            </el-row>
+            <el-divider />
+            <el-row>
+              <!-- <el-form-item label="工作组名称">
+                <el-col :span="18">
+                  <el-input v-model="detailForm.workGroupName" disabled />
+                </el-col>
+              </el-form-item>
+              <el-form-item label="工作组编号">
+                <el-col :span="18">
+                  <el-input v-model="detailForm.workGroupNo" disabled />
+                </el-col>
+              </el-form-item> -->
+              <el-form-item label="项目负责合伙人">
+                <el-col :span="18">
+                  <el-input v-model="detailForm.partner" disabled />
+                </el-col>
+              </el-form-item>
+              <el-form-item label="项目经理">
+                <el-col :span="18">
+                  <el-input v-model="detailForm.projectManager" disabled />
+                </el-col>
+              </el-form-item>
+              <el-form-item label="项目秘书">
+                <el-col :span="18">
+                  <el-input v-model="detailForm.projectAid" disabled />
+                </el-col>
+              </el-form-item>
+              <el-form-item label="项目外勤主管">
+                <el-col :span="18">
+                  <el-input v-model="detailForm.projectOutLeader" disabled />
+                </el-col>
+              </el-form-item>
+              <el-col>
+                <el-form-item label="项目组员" />
+              </el-col>
+              <table class="detail-table" style="margin-bottom:18px;">
+                <tr>
+                  <td>序号</td>
+                  <td>员工编号</td>
+                  <td>姓名</td>
+                  <td>所内级别</td>
+                  <!-- <td>操作</td> -->
+                </tr>
+                <tr v-for="(item, index) in detailForm.staffArr" :key="item.linkmanId">
+                  <td>{{ index + 1 }}</td>
+                  <td><el-input v-model="item.staffNo" readonly /></td>
+                  <td><el-input v-model="item.staffName" /></td>
+                  <td><el-input v-model="item.staffLevel" /></td>
+                  <!-- <td><el-button type="danger" icon="el-icon-delete" circle @click="partReduce" /></td> -->
+                </tr>
+              </table>
+            </el-row>
+            <el-row>
+              <strong>专家组信息</strong>
+            </el-row>
+            <el-divider />
+            <el-row>
+              <div class="table-list">
+                <el-table
+                  v-loading="listLoading"
+                  :data="detailForm.professorArr"
+                  border
+                  element-loading-text="给我一点时间"
+                  fit
+                  highlight-current-row
+                  stripe
+                  header-row-class-name="table-header"
+                  size="small"
+                  max-height="420"
+                  style="width: 100%"
+                  @selection-change="handleSelectionChange"
+                >
+                  <!-- v-loading="listLoading" -->
+                  <el-table-column type="index" :index="typeIndex" label="序号" fixed="left" align="center" />
+                  <el-table-column prop="serverBranch" label="主要服务分所" align="center" />
+                  <el-table-column prop="oneType" label="所在行业（政府预算支出功能分类）一级分类" align="center" />
+                  <el-table-column prop="twoType" label="所在行业（政府预算支出功能分类）二级分类" align="center" />
+                  <el-table-column prop="kind" label="所在行业（国民经济行业分类）门类" align="center" />
+                  <el-table-column prop="broadClass" label="所在行业（国民经济行业分类）大类" align="center" />
+                  <el-table-column prop="professorLevel" label="专家级别" align="center" />
+                  <el-table-column prop="serverLevel" label="服务等级评定" align="center" />
+                  <el-table-column prop="professorName" label="姓名" align="center" />
+                  <el-table-column prop="cardId" label="身份证号" align="center" />
+                  <el-table-column prop="professorTitle" label="职称" align="center" />
+                  <el-table-column prop="education" label="学历" align="center" />
+                  <el-table-column prop="academy" label="院校" align="center" />
+                  <el-table-column prop="phone" label="电话、邮箱" align="center" />
+                  <el-table-column prop="pro" label="常住地（行政地区）省" align="center" />
+                  <el-table-column prop="city" label="常住地（行政地区）市" align="center" />
+                  <el-table-column prop="area" label="常住地（行政地区）区县" align="center" />
+                  <el-table-column prop="direction" label="主要研究方向" align="center" />
+                  <el-table-column prop="production" label="主要著作" align="center" />
+                  <el-table-column prop="result" label="课题成果" align="center" />
+                  <el-table-column prop="projectAccount" label="参与所内项目数" align="center" />
+                  <el-table-column prop="isOpen" label="是否开放系统账号" align="center" />
+                  <el-table-column prop="account" label="账号" align="center" />
+                  <el-table-column prop="password" label="密码" align="center" width="100">
+                    <template slot-scope="scope">
+                      <span>{{ scope.row.password }}</span>
+                      <span style="color:blue;cursor:pointer;margin-left:10px;">修改</span>
+                    </template>
+                  </el-table-column>
+                  <el-table-column prop="indate" label="账号有效期" width="140" align="center" />
+
+                </el-table>
+              </div>
+            </el-row>
+            <el-row style="margin-top:20px;">
+              <strong>审批记录信息</strong>
+            </el-row>
+            <el-divider />
+            <el-row>
+              <el-col :sm="24" :md="24">
+                <table class="detail-table">
+                  <tr>
+                    <td>序号</td>
+                    <td>审批结果</td>
+                    <td>审批意见</td>
+                    <td>审批人</td>
+                    <td>审批时间</td>
+                  </tr>
+                  <tr>
+                    <td>1</td>
+                    <td>通过</td>
+                    <td>同意</td>
+                    <td>李宁</td>
+                    <td>2020-12-02 11:29:39</td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td>通过</td>
+                    <td>同意</td>
+                    <td>马辉</td>
+                    <td>2020-12-03 15:49:25</td>
+                  </tr>
+                </table>
+              </el-col>
+            </el-row>
+          </el-form>
+        </div>
+        <div style="flex:2;">
+          <el-row style="text-align:center;">
+            <strong>审批流程节点信息</strong>
+          </el-row>
+          <div class="stepContent">
+            <el-steps direction="vertical" :active="2" finish-status="success">
+              <el-step title="李宁" description="2020-12-02 11:29:39" />
+              <el-step title="马辉" description="2020-12-03 15:49:25" />
+              <el-step title="贾立华" />
+            </el-steps>
+          </div>
+        </div>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="detailShow = false">关 闭</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import Tinymce from '@/components/Tinymce'
+import { tableListMixin, globalMixin } from '@/utils/mixin'
+export default {
+  name: 'ProjectLedger',
+  components: {
+    Tinymce
+  },
+  mixins: [tableListMixin, globalMixin],
+  data() {
+    return {
+      listQuery: {
+        current: 1,
+        size: 10,
+        expertName: ''
+      },
+      props: {
+          label: 'label',
+          children: 'children'
+      },
+      propData: [
+        {
+          label: '专家菜单一'
+        }, {
+          label: '专家菜单二'
+        }
+      ],
+      value1: '',
+      activeName: '3',
+      addFrameShow: false,
+      list: [
+        {
+          workGroupName: '一般公共预算项目绩效评价-工作组',
+          workGroupNo: 'G-2020-001',
+          buildTime: '2020-12-01 11:28:12',
+          buildMan: '马辉',
+          projectNo: '2020-07714-01',
+          projectName: '2020-07714-01-天津市滨海新区财政局-一般公共预算项目绩效评价',
+          clientName: '天津市滨海新区财政局',
+          riskLevel: 3,
+          partner: '贾立华',
+          projectManager: '马辉',
+          projectAid: '李宁',
+          projectOutLeader: '李宁',
+          status: 2
+        },
+        {
+          workGroupName: '内部控制体系建设-工作组',
+          workGroupNo: 'G-2020-002',
+          buildTime: '2020-12-01 11:28:12',
+          buildMan: '马辉',
+          projectNo: '2018-06470-01',
+          projectName: '2018-06470-01-天津市铁路运输检察院-内部控制体系建设',
+          clientName: '天津市铁路运输检察院',
+          projectType: 2,
+          riskLevel: 3,
+          partner: '贾立华',
+          projectManager: '马辉',
+          projectAid: '李宛昱',
+          projectOutLeader: '李宛昱',
+          status: 1
+        },
+        {
+          workGroupName: '内部控制评价-工作组',
+          workGroupNo: 'G-2020-003',
+          buildTime: '2020-12-01 11:28:12',
+          buildMan: '马辉',
+          projectNo: '2019-01477',
+          projectName: '2019-01477-天津交响乐团-内部控制评价',
+          clientName: '天津交响乐团',
+          riskLevel: 3,
+          partner: '贾立华',
+          projectManager: '马辉',
+          projectAid: '李宛昱',
+          projectOutLeader: '李宛昱',
+          status: 2
+        }
+      ],
+      total: 1,
+      addShow: false,
+      bottomSearchBoxShow: false,
+      detailShow: false,
+      buildShow: false,
+      peopleShow: false,
+      title: '',
+      addForm: {
+          workGroupName: '一般公共预算项目绩效评价-工作组',
+          workGroupNo: 'G-2020-001',
+          buildTime: '2020-12-01 11:28:12',
+          buildMan: '马辉',
+          projectNo: '2020-07714-01',
+          projectName: '2020-07714-01-天津市滨海新区财政局-一般公共预算项目绩效评价',
+          clientName: '天津市滨海新区财政局',
+          functionClassify: '一般公共服务支出-财政事务',
+          ecoClassify: '公共管理、社会保障和社会组织-国家机构-国家行政机构-经济事务管理机构',
+          riskLevel: 3,
+          projectType: 1,
+          partner: '贾立华',
+          projectManager: '马辉',
+          projectAid: '李宁',
+          projectOutLeader: '李宁',
+          content: '<div style="text-align:center">关于开展绩效项目绩效评价的函</div><br>浙江分所:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;经天职北京总部单位领导批示同意，按照总所单位安排，现由我总所项目单位对你部门绩效项目开展绩效评价工作。为保证评价工作的顺利进行，请你单位需求部门对绩效评价工作组予以支持，并通知有关业务部门（有关单位）积极配合，及时提供评价所需资料。<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;感谢大力支持！<br><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;总所单位联系人：胡颖<br><br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;联系电话：18829928798<br><div style="text-align:right">天职国际北京总所</div><div style="text-align:right">2021年01月22日</div>',
+          linkmanArr: [
+          {
+            linkmanId: 1,
+            companyName: '浙江省科学技术厅',
+            linkmanName: '许丹一丰',
+            linkmanPhone: '15678992345'
+          }, {
+            linkmanId: 2,
+            companyName: '天津市司法局',
+            linkmanName: '张涛',
+            linkmanPhone: '19925363738'
+          }, {
+            linkmanId: 3,
+            companyName: '天津市滨海新区财政局',
+            linkmanName: '贾秀林',
+            linkmanPhone: '15825367897'
+          }
+        ],
+        staffArr: [
+          {
+            staffId: 1,
+            staffNo: '201766742',
+            staffName: '李东程',
+            staffLevel: '审计员B'
+          }, {
+            staffId: 2,
+            staffNo: '201917642',
+            staffName: '陈泽涛',
+            staffLevel: '审计员B'
+          }
+        ],
+        workTaskArr: [
+          {
+            id: 1,
+            taskDesc: '项目资料清单收集、上传',
+            continueTime: [new Date(2021, 10, 10, 10, 10), new Date(2021, 10, 11, 10, 10)],
+            taskTime: '2',
+            taskMan: '',
+            taskAdjust: ''
+          },
+          {
+            id: 2,
+            taskDesc: '绩效评价方案制度',
+            continueTime: [new Date(2021, 10, 10, 10, 10), new Date(2021, 10, 11, 10, 10)],
+            taskTime: '3',
+            taskMan: '',
+            taskAdjust: ''
+          },
+          {
+            id: 3,
+            taskDesc: '绩效项目评价实施',
+            continueTime: [new Date(2021, 10, 10, 10, 10), new Date(2021, 10, 11, 10, 10)],
+            taskTime: '3',
+            taskMan: '',
+            taskAdjust: ''
+          },
+          {
+            id: 1,
+            taskDesc: '绩效报告编写',
+            continueTime: [new Date(2021, 10, 10, 10, 10), new Date(2021, 10, 11, 10, 10)],
+            taskTime: '2',
+            taskMan: '',
+            taskAdjust: ''
+          }
+        ],
+        outlineArr: [
+          {
+            id: 1,
+            outlineName: '项目中长期规划'
+          }, {
+            id: 2,
+            outlineName: '项目立项背景、立项依据及程序'
+          }, {
+            id: 3,
+            outlineName: '项目相关政策'
+          }, {
+            id: 4,
+            outlineName: '项目绩效目标与工作要求'
+          }, {
+            id: 5,
+            outlineName: '从业务管理和资金管理角度，项目涉及的相关方有哪些，各相关方在项目流程中承担的职责是什么'
+          }, {
+            id: 6,
+            outlineName: '评价期间项目资金申报、批复、使用、调整及结余情况'
+          }, {
+            id: 7,
+            outlineName: '项目实施与效果情况'
+          }, {
+            id: 8,
+            outlineName: '项目中期监控和成果验收情况'
+          }, {
+            id: 9,
+            outlineName: '项目相关国际或国内实施情况与经验做法'
+          }, {
+            id: 10,
+            outlineName: '项目实施中的经验做法、存在问题与规划建议等'
+          }
+        ],
+          professorArr: [
+          {
+            professorName: '',
+            professorLevel: '',
+            professorTitle: '',
+            professorEducation: '',
+            professorSeverBranch: '',
+            professorPhone: '',
+            isOpen: 2,
+            openIndate: ''
+          }
+         ]
+      },
+      professorList: [
+        {
+        serverBranch: '天津分所',
+        oneType: '一般公共服务',
+        twoType: '政协事务',
+        kind: '公共管理、社会保障和社会组织',
+        broadClass: '人民政协、民主党派',
+        professorLevel: '教授',
+        serverLevel: 'A',
+        professorName: '胡长飞',
+        cardId: '110101196503076336',
+        professorTitle: '正高',
+        education: '博士',
+        academy: '复旦大学',
+        phone: '13587234544',
+        pro: '北京市',
+        city: '朝阳区',
+        area: '朝外街道',
+        direction: '政协事务',
+        production: '',
+        result: '',
+        projectAccount: '15'
+      }, {
+        serverBranch: '浙江分所',
+        oneType: '交通运输',
+        twoType: '民用航空运输',
+        kind: '交通运输、仓储和邮政业',
+        broadClass: '航空运输业',
+        professorLevel: '教授级高级工程师',
+        serverLevel: 'A',
+        professorName: '程映雪',
+        cardId: '140105198403076873',
+        professorTitle: '正高',
+        education: '博士',
+        academy: '南京大学',
+        phone: '13687263095',
+        pro: '浙江省',
+        city: '杭州市',
+        area: '西湖区',
+        direction: '民用航空运输',
+        production: '',
+        result: '',
+        projectAccount: '2'
+      }, {
+        serverBranch: '天津分所',
+        oneType: '农林水事务',
+        twoType: '林业',
+        kind: '农、林、牧、渔业',
+        broadClass: '农业',
+        professorLevel: '研究员',
+        serverLevel: 'A',
+        professorName: '邹刚',
+        cardId: '41010219710307574X',
+        professorTitle: '正高',
+        education: '博士',
+        academy: '厦门大学',
+        phone: '13587263096',
+        pro: '北京市',
+        city: '东城区',
+        area: '东华门街道',
+        direction: '林业',
+        production: '',
+        result: '',
+        projectAccount: '22'
+      }, {
+        serverBranch: '北京分所',
+        oneType: '科学技术',
+        twoType: '技术研究与开发',
+        kind: '科学研究和技术服务业',
+        broadClass: '研究和试验发展',
+        professorLevel: '研究员',
+        serverLevel: 'A',
+        professorName: '罗琴',
+        cardId: '11010119650307105X',
+        professorTitle: '正高',
+        education: '博士',
+        academy: '复旦大学',
+        phone: '13387298023',
+        pro: '天津市',
+        city: '和平区',
+        area: '小白楼街道',
+        direction: '技术研究与开发',
+        production: '',
+        result: '',
+        projectAccount: '12'
+      }, {
+        serverBranch: '北京分所',
+        oneType: '工业商业金融等事务',
+        twoType: '制造业',
+        kind: '制造业',
+        broadClass: '农副食品加工业',
+        professorLevel: '高级工程师',
+        serverLevel: 'A',
+        professorName: '吴伯宁',
+        cardId: '620102196203071134',
+        professorTitle: '副高',
+        education: '研究生',
+        academy: '中国科学技术大学',
+        phone: '13587263098',
+        pro: '湖北省',
+        city: '武汉市',
+        area: '武昌区',
+        direction: '制造业',
+        production: '',
+        result: '',
+        projectAccount: '1'
+      }, {
+        serverBranch: '浙江分所',
+        oneType: '交通运输',
+        twoType: '民用航空运输',
+        kind: '交通运输、仓储和邮政业',
+        broadClass: '航空运输业',
+        professorLevel: '教授级高级工程师',
+        serverLevel: 'A',
+        professorName: '韩同兵',
+        cardId: '440103197003078195',
+        professorTitle: '正高',
+        education: '博士',
+        academy: '浙江大学',
+        phone: '13587263099',
+        pro: '安徽省',
+        city: '合肥市',
+        area: '蜀山区',
+        direction: '民用航空运输',
+        production: '',
+        result: '',
+        projectAccount: '3'
+      }
+      ],
+      peopleArr: [
+        {
+          peopleRole: '外勤主管',
+          peopleNo: '202019942',
+          peopleName: '李宁',
+          workAsk: ''
+        }, {
+          peopleRole: '组员',
+          peopleNo: '202019929',
+          peopleName: '朱晓琳',
+          workAsk: ''
+        }
+      ],
+      groupList: [
+        {
+          workGroupName: '一般公共预算项目绩效评价-工作组',
+          workGroupNo: 'G-2020-001',
+          buildTime: '2020-12-01 11:28:12',
+          buildMan: '马辉'
+        }, {
+          workGroupName: '内部控制体系建设-工作组',
+          workGroupNo: 'G-2020-002',
+          buildTime: '2020-12-01 11:28:12',
+          buildMan: '马辉'
+        }
+      ],
+      projectList: [
+         {
+          projectNo: '2019-01477-01',
+          projectName: '2019-01477-01-天津交响乐团-内部控制评价',
+          clientName: '天津交响乐团',
+          riskLevel: 3,
+          isBuild: 2
+        },
+        {
+          projectNo: '2020-00650-01',
+          projectName: '2020-00650-01-天津市司法局-政务咨询',
+          clientName: '天津市司法局',
+          riskLevel: 3,
+          isBuild: 2
+        },
+        {
+          projectNo: '2020-04598-01',
+          projectName: '2020-04598-01-天津市司法局-一般公共预算项目绩效评价',
+          clientName: '天津市司法局',
+          riskLevel: 3,
+          isBuild: 2
+        }
+      ],
+      detailForm: {
+        workGroupName: '一般公共预算项目绩效评价-工作组',
+        workGroupNo: 'G-2020-001',
+        buildTime: '2020-12-01 11:28:12',
+        buildMan: '马辉',
+        projectNo: '2020-07714-01',
+        projectName: '2020-07714-01-天津市滨海新区财政局-一般公共预算项目绩效评价',
+        clientName: '天津市滨海新区财政局',
+        projectType: 1,
+        functionClassify: '一般公共服务支出-财政事务',
+        ecoClassify: '公共管理、社会保障和社会组织-国家机构-国家行政机构-经济事务管理机构',
+        riskLevel: '低',
+        partner: '贾立华',
+        projectManager: '马辉',
+        projectAid: '李宁',
+        projectOutLeader: '李宁',
+        projectType: 1,
+        staffArr: [
+          {
+            staffId: 1,
+            staffNo: '201766742',
+            staffName: '李东程',
+            staffLevel: '审计员B'
+          }, {
+            staffId: 2,
+            staffNo: '201917642',
+            staffName: '陈泽涛',
+            staffLevel: '审计员B'
+          }
+        ],
+        linkmanArr: [
+          {
+            linkmanId: 1,
+            companyName: '浙江省科学技术厅',
+            linkmanName: '',
+            linkmanPhone: ''
+          }, {
+            linkmanId: 2,
+            companyName: '天津市司法局',
+            linkmanName: '',
+            linkmanPhone: ''
+          }, {
+            linkmanId: 3,
+            companyName: '天津市滨海新区财政局',
+            linkmanName: '',
+            linkmanPhone: ''
+          }
+        ],
+        professorArr: [
+          {
+        serverBranch: '天津分所',
+        oneType: '一般公共服务',
+        twoType: '政协事务',
+        kind: '公共管理、社会保障和社会组织',
+        broadClass: '人民政协、民主党派',
+        professorLevel: '教授',
+        serverLevel: 'A',
+        professorName: '胡长飞',
+        cardId: '110101196503076336',
+        professorTitle: '正高',
+        education: '博士',
+        academy: '复旦大学',
+        phone: '13587234544',
+        pro: '北京市',
+        city: '朝阳区',
+        area: '朝外街道',
+        direction: '政协事务',
+        production: '',
+        result: '',
+        projectAccount: '15',
+        isOpen: '是',
+        account: '胡长飞',
+        password: '123456',
+        indate: '2020-12-20 00:00:00至2030-12-19 23:59:59'
+      }, {
+        serverBranch: '浙江分所',
+        oneType: '交通运输',
+        twoType: '民用航空运输',
+        kind: '交通运输、仓储和邮政业',
+        broadClass: '航空运输业',
+        professorLevel: '教授级高级工程师',
+        serverLevel: 'A',
+        professorName: '程映雪',
+        cardId: '140105198403076873',
+        professorTitle: '正高',
+        education: '博士',
+        academy: '南京大学',
+        phone: '13687263095',
+        pro: '浙江省',
+        city: '杭州市',
+        area: '西湖区',
+        direction: '民用航空运输',
+        production: '',
+        result: '',
+        projectAccount: '2',
+        isOpen: '是',
+        account: '程映雪',
+        password: '123456',
+        indate: '2020-12-20 00:00:00至2030-12-19 23:59:59'
+      }
+         ]
+      }
+    }
+  },
+  methods: {
+    // 获取列表
+    getList() {},
+    // 搜索
+    onSeaech() {},
+    // 重置
+    listQueryReset() {
+      this.$refs['listQuery'].resetFields()
+    },
+    professorAdd() {
+      this.buildShow = true
+    },
+    creatProjectGroup() {
+       this.addShow = true
+    },
+    professorUpdate() {
+      this.addShow = true
+    },
+    closeDialog() {
+      this.$refs['addForm'].resetFields()
+    },
+    // 展开查询更多
+    searchBoxShow() {
+      this.bottomSearchBoxShow = !this.bottomSearchBoxShow
+    },
+    testclick() {
+      this.addFrameShow = true
+    },
+     // 添加联系人
+    linkmanAdd() {
+      // if (this.addForm.professorArr.length > 4) {
+      //   this.$message({
+      //     type: 'warning',
+      //     message: '最多设置5个子项目!'
+      //   })
+      //   return false
+      // }
+      const timepart = {
+            linkmanId: '',
+            linkmanName: '',
+            linkmanPhone: ''
+      }
+      this.addForm.linkmanArr.push(timepart)
+    },
+    // 删除
+    linkmanReduce(index) {
+      this.addForm.linkmanArr.splice(index, 1)
+    },
+    // 添加
+    partAdd() {
+      // if (this.addForm.professorArr.length > 4) {
+      //   this.$message({
+      //     type: 'warning',
+      //     message: '最多设置5个子项目!'
+      //   })
+      //   return false
+      // }
+      const timepart = {
+          professorName: '',
+          professorLevel: '',
+          professorTitle: '',
+          professorEducation: '',
+          professorSeverBranch: '',
+          professorPhone: ''
+      }
+      this.addForm.professorArr.push(timepart)
+    },
+    // 删除
+    partReduce(index) {
+      this.addForm.professorArr.splice(index, 1)
+    },
+    handleDetail(index, row) {
+      this.detailShow = true
+    },
+    chooseClerk() {
+      this.peopleShow = true
+    }
+  }
+}
+</script>
+<style rel="stylesheet/scss" lang="scss" scoped>
+  .detail-table tr:first-child{
+    background-color: #F5FAFF;
+  }
+  strong{
+    color: blue;
+  }
+  .professorTable{
+    white-space: nowrap;
+  }
+</style>

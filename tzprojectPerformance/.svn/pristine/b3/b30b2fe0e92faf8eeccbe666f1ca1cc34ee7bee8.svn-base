@@ -1,0 +1,332 @@
+<script>
+/*
+ * @Author: Your name
+ * @Date:   2020-12-10 14:54:01
+ * @Last Modified by:   Your name
+ * @Last Modified time: 2020-12-10 15:07:00
+ */
+</script>
+<template>
+  <div class="page-container">
+    <div class="table-list-search">
+      <el-form ref="listQuery" :model="listQuery" inline>
+        <el-form-item label="合同编号" prop="companyName">
+          <el-input v-model="listQuery.companyName" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="el-icon-search">查询</el-button>
+          <el-button @click="listQueryReset">重置</el-button>
+        </el-form-item>
+        <!-- <el-form-item class="table-search-button">
+          <el-button type="primary" size="small" icon="el-icon-edit" @click="handelAdd">新增</el-button>
+        </el-form-item> -->
+      </el-form>
+    </div>
+    <!--新增-->
+    <div class="table-list">
+      <el-table
+        v-loading="listLoading"
+        :data="list"
+        border
+        element-loading-text="给我一点时间"
+        fit
+        highlight-current-row
+        stripe
+        header-row-class-name="table-header"
+        size="small"
+        max-height="420"
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+      >
+        <!-- v-loading="listLoading" -->
+        <el-table-column type="index" :index="typeIndex" label="序号" align="center" fixed="left" />
+        <el-table-column prop="test1" label="按政府预算支出功能分类（一级分类）" align="center" />
+        <el-table-column prop="test2" label="按政府预算支出功能分类（二级分类）" align="center" />
+        <el-table-column prop="test3" label="按国民经济行业分类（门类）" align="center" />
+        <el-table-column prop="test4" label="按国民经济行业分类（大类）" align="center" />
+        <el-table-column prop="test5" label="合同编号" align="center" />
+        <el-table-column prop="test6" label="签约年度" align="center" />
+        <el-table-column prop="test7" label="合同签约日期" align="center" />
+        <el-table-column prop="test8" label="分所" align="center" />
+        <el-table-column prop="test9" label="所属部门" align="center" />
+        <el-table-column prop="test10" label="项目负责合伙人" align="center" />
+        <el-table-column prop="test11" label="项目经理" align="center" />
+        <el-table-column prop="test12" label="项目成员" align="center" />
+        <el-table-column prop="test13" label="项目专家" align="center" />
+        <el-table-column prop="test12" label="项目名称" align="center" />
+        <el-table-column prop="test12" label="业务类型" align="center" />
+        <el-table-column prop="test12" label="客户所属地区" align="center" />
+        <el-table-column prop="test12" label="业务级别" align="center" />
+        <el-table-column prop="test12" label="合同类别" align="center" />
+        <el-table-column prop="test12" label="合同描述" align="center" />
+        <el-table-column prop="test12" label="委托方（甲方）名称" align="center" />
+        <el-table-column prop="test12" label="联系人（委托方）" align="center" />
+        <el-table-column prop="test12" label="被评价对象" align="center" />
+        <el-table-column prop="test12" label="委托方上一级客户名称" align="center" />
+        <el-table-column prop="test12" label="备注" align="center" />
+        <el-table-column align="center" label="操作" width="100" fixed="right">
+          <template>
+            <!-- <el-button
+              size="small"
+              plain
+              type="primary"
+            >修改</el-button> -->
+            <el-button
+              size="small"
+              plain
+              type="primary"
+            >详情</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <!-- <div class="pagination-container">
+      <el-pagination
+        background
+        :current-page="listQuery.current"
+        :page-sizes="[10,20,30, 50]"
+        :page-size="listQuery.size"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div> -->
+    <el-dialog
+      width="75%"
+      class="dialog"
+      title="新增"
+      :close-on-click-modal="false"
+      :visible.sync="addShow"
+      @close="closeDialog"
+    >
+      <div class="dialog-body">
+        <el-form
+          :model="addForm"
+          size="small"
+          label-width="300px"
+          :label-position="center"
+        >
+          <el-row>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="按政府预算支出功能分类（一级分类）">
+                <el-input disabled placeholder="绩效评价平台导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="24">
+              <el-form-item label="按政府预算支出功能分类（二级分类）">
+                <el-input disabled placeholder="绩效评价平台导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="24">
+              <el-form-item label="按国民经济行业分类（门类）">
+                <el-input disabled placeholder="绩效评价平台导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="24">
+              <el-form-item label="按国民经济行业分类（大类）">
+                <el-input size="small" disabled placeholder="绩效评价平台导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="24">
+              <el-form-item label="合同编号">
+                <el-input size="small" disabled placeholder="项目管理系统合同版块导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="签约年度">
+                <el-input size="small" disabled placeholder="项目管理系统合同版块导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="合同签约日期">
+                <el-input size="small" disabled placeholder="项目管理系统合同版块导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="分所">
+                <el-input size="small" disabled placeholder="项目管理系统合同版块导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="所属部门">
+                <el-input size="small" disabled placeholder="项目管理系统合同版块导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="项目负责合伙人">
+                <el-input size="small" disabled placeholder="项目管理系统合同版块导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="项目经理">
+                <el-input size="small" disabled placeholder="项目管理系统合同版块导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="项目成员">
+                <el-input size="small" disabled placeholder="项目管理系统合同版块导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="项目专家">
+                <el-input size="small" disabled placeholder="评价平台自动更新" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="项目名称">
+                <el-input size="small" disabled placeholder="项目管理系统导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="业务类型">
+                <el-input size="small" disabled placeholder="项目管理系统导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="客户所属地区">
+                <el-input size="small" disabled placeholder="根据委托方地区自动生成" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="业务级别">
+                <el-input size="small" disabled placeholder="项目管理系统导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="合同类别">
+                <el-input size="small" disabled placeholder="项目管理系统合同版块导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="合同描述">
+                <el-input size="small" disabled placeholder="项目管理系统合同版块导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="委托方（甲方）名称">
+                <el-input size="small" disabled placeholder="项目管理系统合同版块导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="联系人（委托方）">
+                <el-input size="small" disabled placeholder="项目管理系统合同版块导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="被评价对象">
+                <el-input size="small" disabled placeholder="项目管理系统合同版块导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="委托方上一级客户名称">
+                <el-input size="small" disabled placeholder="项目管理系统合同版块导入" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="备注">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addShow = false">取 消</el-button>
+        <el-button type="warning" @click="holdSave">暂 存</el-button>
+        <el-button type="primary" @click="submitSave">提 交</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import { tableListMixin, globalMixin } from '@/utils/mixin'
+export default {
+  name: 'ApprovalApply',
+  mixins: [tableListMixin, globalMixin],
+  data() {
+    return {
+      listQuery: {
+        current: 1,
+        size: 10
+      },
+      parentListQuery: {
+        current: 1,
+        size: 10
+      },
+      list: [{
+        text1: '',
+        text2: '',
+        text3: '',
+        text4: '',
+        text5: '',
+        text6: '',
+        text7: '',
+        text8: '',
+        text9: '',
+        text10: '',
+        text11: '',
+        text12: '',
+        text13: '',
+        riskLevel: 1,
+        status: 2
+      }],
+      total: 1,
+      parentTotal: null,
+      addShow: false,
+      addChildShow: false,
+      title: '',
+      addForm: {
+        companyType: 1
+      }
+    }
+  },
+  methods: {
+    // 获取列表
+    getList() {},
+    // 搜索
+    onSeaech() {},
+    // 重置
+    listQueryReset() {
+      this.$refs['listQuery'].resetFields()
+    },
+    handelAdd() {
+      this.title = '新增'
+      this.addShow = true
+      this.addForm.companyType = ''
+    },
+    closeDialog() {
+      this.$refs['addForm'].resetFields()
+    },
+    timeAdd() {
+      console.log(this.addForm.childProjectArr)
+      if (this.addForm.childProjectArr.length > 4) {
+        this.$message({
+          type: 'warning',
+          message: '最多设置5个子项目!'
+        })
+        return false
+      }
+      const timepart = {
+        childProjectName: '',
+        childProjectNo: ''
+      }
+      this.addForm.childProjectArr.push(timepart)
+    },
+    creatChildProject(index, row) {
+      this.addChildShow = true
+    },
+    holdSave() {
+      this.addChildShow = false
+      this.addShow = false
+    },
+    submitSave() {
+      this.addChildShow = false
+      this.addShow = false
+    }
+  }
+}
+</script>
+<style rel="stylesheet/less" lang="less" scoped>
+
+</style>

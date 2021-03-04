@@ -1,0 +1,700 @@
+<script>
+/*
+ * @Author: Your name
+ * @Date:   2020-12-07 16:04:56
+ * @Last Modified by:   Your name
+ * @Last Modified time: 2021-01-27 10:20:32
+ */
+</script>
+<template>
+  <div class="page-container">
+    <div class="table-list-search">
+      <el-form ref="listQuery" :model="listQuery" inline size="mini">
+        <el-form-item label="项目名称" prop="companyName">
+          <el-input v-model="listQuery.companyName" />
+        </el-form-item>
+        <el-form-item label="项目编号" prop="companyName">
+          <el-input v-model="listQuery.companyName" />
+        </el-form-item>
+        <el-form-item label="风险级别" prop="companyName">
+          <el-select>
+            <el-option value="1" label="A">A</el-option>
+            <el-option value="2" label="B">B</el-option>
+            <el-option value="3" label="C">C</el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item class="table-search-button">
+          <el-button type="primary" size="mini" icon="el-icon-download" @click="chooseItem">归档模板</el-button>
+        </el-form-item>
+        <el-row>
+          <el-form-item>
+            <el-button size="mini" type="primary" icon="el-icon-search">查 询</el-button>
+            <el-button size="mini" @click="listQueryReset">重 置</el-button>
+          </el-form-item>
+        </el-row>
+      </el-form>
+    </div>
+    <div class="table-list">
+      <el-table
+        v-loading="listLoading"
+        :data="list"
+        border
+        element-loading-text="给我一点时间"
+        fit
+        highlight-current-row
+        stripe
+        header-row-class-name="table-header"
+        size="small"
+        max-height="420"
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+      >
+        <!-- v-loading="listLoading" -->
+        <el-table-column type="index" :index="typeIndex" label="序号" align="center" />
+        <!-- <el-table-column prop="childProjectNo" label="子项目编号" align="center" width="120" />
+        <el-table-column prop="childProjectName" label="子项目名称" align="center" width="280" />
+        <el-table-column prop="childProjectLevel" label="所属级别" align="center">
+          <template slot-scope="scope">
+            <span v-if="scope.row.childProjectLevel === 1">A</span>
+            <span v-if="scope.row.childProjectLevel === 2">B</span>
+            <span v-if="scope.row.childProjectLevel === 3">C</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="functionClassify" label="支出功能分类" width="230" align="center" />
+        <el-table-column prop="ecoClassify" label="国民经济分类" width="220" align="center" />
+        <el-table-column prop="riskLevel" label="风险级别" align="center">
+          <template slot-scope="scope">
+            <span v-if="scope.row.riskLevel === 1">高</span>
+            <span v-if="scope.row.riskLevel === 2">中</span>
+            <span v-if="scope.row.riskLevel === 3">低</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="approvalTime" label="申请时间" width="140" align="center" /> -->
+        <!-- <el-table-column prop="workGroupName" label="工作组名称" width="110" align="center" />
+        <el-table-column prop="workGroupNo" label="工作组编号" align="center" /> -->
+        <el-table-column prop="projectNo" label="项目编号" width="130" align="center" />
+        <el-table-column prop="projectName" label="项目名称" width="460" align="center" />
+        <el-table-column prop="riskLevel" label="风险级别" width="80" align="center">
+          <template slot-scope="scope">
+            <span v-if="scope.row.riskLevel === 1">A</span>
+            <span v-if="scope.row.riskLevel === 2">B</span>
+            <span v-if="scope.row.riskLevel === 3">C</span>
+          </template>
+        </el-table-column>
+        <!-- <el-table-column prop="clientName" label="客户名称" align="center" /> -->
+        <el-table-column prop="designMan" label="归档人" width="70" align="center" />
+        <el-table-column prop="approvalTime" label="归档时间" width="140" align="center" />
+        <el-table-column prop="status" label="归档状态" width="70" align="center">
+          <template slot-scope="scope">
+            <span v-if="scope.row.status === 1">未归档</span>
+            <span v-if="scope.row.status === 2">已归档</span>
+          </template>
+        </el-table-column>
+        <el-table-column align="center" label="操作" width="130" fixed="right">
+          <template slot-scope="scope">
+            <el-button
+              v-if="scope.row.status === 1"
+              size="small"
+              plain
+              type="primary"
+              @click="handelAdd(scope.$index, scope.row)"
+            >项目归档</el-button>
+            <el-button
+              v-if="scope.row.status === 2"
+              size="small"
+              plain
+              type="primary"
+              @click="handleDetail(scope.$index, scope.row)"
+            >详情</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <!-- <div class="pagination-container">
+      <el-pagination
+        background
+        :current-page="listQuery.current"
+        :page-sizes="[10,20,30, 50]"
+        :page-size="listQuery.size"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div> -->
+    <!--模板下载选择-->
+    <el-dialog
+      width="90%"
+      class="dialog"
+      title="模板列表信息"
+      :close-on-click-modal="false"
+      :visible.sync="partShow"
+      @close="closeDialog"
+    >
+      <div class="dialog-body">
+        <el-form :model="addForm" size="small" label-width="140px">
+          <el-row>
+            <table class="detail-table">
+              <tr>
+                <td>序号</td>
+                <td>模板名称</td>
+                <td>操作</td>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td class="partStyle">项目承接类.doc</td>
+                <td><el-button size="mini" plain type="primary">下载</el-button></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td class="partStyle">评价准备类.pdf</td>
+                <td><el-button size="mini" plain type="primary">下载</el-button></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td class="partStyle">评价过程类—指标体系初步设计资料.doc</td>
+                <td><el-button size="mini" plain type="primary">下载</el-button></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td class="partStyle">评价过程类—预调研资料.doc</td>
+                <td><el-button size="mini" plain type="primary">下载</el-button></td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td class="partStyle">评价过程类—评价实施资料.doc</td>
+                <td><el-button size="mini" plain type="primary">下载</el-button></td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td class="partStyle">评价结果类.doc</td>
+                <td><el-button size="mini" plain type="primary">下载</el-button></td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td class="partStyle">其他类.doc</td>
+                <td><el-button size="mini" plain type="primary">下载</el-button></td>
+              </tr>
+            </table>
+          </el-row>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="partShow = false">关 闭</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog
+      width="90%"
+      class="dialog"
+      title="项目归档信息"
+      :close-on-click-modal="false"
+      :visible.sync="addChildShow"
+      @close="closeDialog"
+    >
+      <div class="dialog-body">
+        <el-form :model="addForm" size="small" label-width="140px">
+          <el-collapse v-model="checkCut" accordion>
+            <el-collapse-item title="项目基本信息" name="1">
+              <el-row>
+                <el-col :sm="24" :md="24">
+                  <el-form-item label="项目名称">
+                    <el-input v-model="addForm.projectName" disabled />
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="项目编号">
+                    <el-input v-model="addForm.projectNo" disabled />
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="业务类型">
+                    <el-input value="非鉴证业务-政务软件服务-软件定制开发" disabled />
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="项目四级分类">
+                    <el-select v-model="addForm.projectType" disabled>
+                      <el-option label="财政评价项目" :value="1">财政评价项目</el-option>
+                      <el-option label="部门评价项目" :value="2">部门评价项目</el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="风险级别">
+                    <el-input v-model="addForm.riskLevel" disabled />
+                  </el-form-item>
+                </el-col>
+                <el-form-item label="预算支出功能分类">
+                  <el-col :span="24">
+                    <el-input v-model="addForm.functionClassify" disabled />
+                  </el-col>
+                </el-form-item>
+                <el-form-item label="国民经济行业分类">
+                  <el-col :span="24">
+                    <el-input v-model="addForm.ecoClassify" disabled />
+                  </el-col>
+                </el-form-item>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="项目负责合伙人">
+                    <el-input
+                      v-model="addForm.partner"
+                      disabled="disabled"
+                    />
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="项目经理">
+                    <el-input
+                      v-model="addForm.projectManager"
+                      disabled="disabled"
+                    />
+                  </el-form-item>
+                </el-col>
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="项目外勤主管">
+                    <el-input
+                      v-model="addForm.projectOutLeader"
+                      disabled="disabled"
+                    />
+                  </el-form-item>
+                </el-col>
+              </el-row>
+            </el-collapse-item>
+            <el-collapse-item title="工作档案信息" name="2">
+              <el-row>
+                <el-col :sm="24" :md="24">
+                  <el-form-item label="工作档案">
+                    <el-radio-group v-model="addForm.workRecord">
+                      <el-radio :label="1">财政部项目</el-radio>
+                      <el-radio :label="2">其他项目</el-radio>
+                    </el-radio-group>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row v-if="addForm.workRecord==1">
+                <el-col :sm="24" :md="12">
+                  <el-form-item label="上传工作档案-财政部项目">
+                    <el-upload
+                      class="upload-demo"
+                      action="https://jsonplaceholder.typicode.com/posts/"
+                      :on-preview="handlePreview"
+                      :on-remove="handleRemove"
+                      :before-remove="beforeRemove"
+                      multiple
+                      :limit="3"
+                      :on-exceed="handleExceed"
+                      :file-list="fileList"
+                    >
+                      <el-button size="small" type="primary">点击上传</el-button>
+                    </el-upload>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-row v-if="addForm.workRecord==2">
+                <table class="detail-table">
+                  <tr>
+                    <td>序号</td>
+                    <td>档案类型</td>
+                    <td>档案名称</td>
+                    <td>归档时间</td>
+                    <td>操作</td>
+                  </tr>
+                  <tr>
+                    <td>1</td>
+                    <td>项目承接类</td>
+                    <td>中标通知书.doc</td>
+                    <td>2020-12-12 12:22:10</td>
+                    <td><el-button size="mini" type="primary">点击上传</el-button>
+                      <el-button size="mini" type="danger">删除</el-button></td>
+                  </tr>
+                  <tr>
+                    <td>2</td>
+                    <td>评价准备类</td>
+                    <td>调研提纲.doc</td>
+                    <td>2020-12-12 12:22:10</td>
+                    <td><el-button size="mini" type="primary">点击上传</el-button>
+                      <el-button size="mini" type="danger">删除</el-button></td>
+                  </tr>
+                  <tr>
+                    <td>3</td>
+                    <td>评价过程类—指标体系初步设计资料</td>
+                    <td>初步绩效评价指标体系.doc</td>
+                    <td>2020-12-12 12:22:10</td>
+                    <td><el-button size="mini" type="primary">点击上传</el-button>
+                      <el-button size="mini" type="danger">删除</el-button></td>
+                  </tr>
+                  <tr>
+                    <td>4</td>
+                    <td>评价过程类—预调研资料</td>
+                    <td>调研行程安排.doc</td>
+                    <td>2020-12-12 12:22:10</td>
+                    <td><el-button size="mini" type="primary">点击上传</el-button>
+                      <el-button size="mini" type="danger">删除</el-button></td>
+                  </tr>
+                  <tr>
+                    <td>5</td>
+                    <td>评价过程类—评价实施资料</td>
+                    <td>绩效评价工作方案.doc</td>
+                    <td>2020-12-12 12:22:10</td>
+                    <td><el-button size="mini" type="primary">点击上传</el-button>
+                      <el-button size="mini" type="danger">删除</el-button></td>
+                  </tr>
+                  <tr>
+                    <td>6</td>
+                    <td>评价结果类</td>
+                    <td>绩效评价报告.doc</td>
+                    <td>2020-12-12 12:22:10</td>
+                    <td><el-button size="mini" type="primary">点击上传</el-button>
+                      <el-button size="mini" type="danger">删除</el-button></td>
+                  </tr>
+                  <tr>
+                    <td>7</td>
+                    <td>其他类</td>
+                    <td>项目总结表.doc</td>
+                    <td>2020-12-12 12:22:10</td>
+                    <td><el-button size="mini" type="primary">点击上传</el-button>
+                      <el-button size="mini" type="danger">删除</el-button></td>
+                  </tr>
+                </table>
+              </el-row>
+            </el-collapse-item>
+          </el-collapse>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addChildShow = false">取 消</el-button>
+        <!-- <el-button type="warning" @click="holdSave">暂 存</el-button> -->
+        <el-button type="primary" @click="submitSave">提 交</el-button>
+      </span>
+    </el-dialog>
+    <el-dialog
+      width="90%"
+      class="dialog"
+      title="项目归档详情"
+      :close-on-click-modal="false"
+      :visible.sync="detailShow"
+      @close="closeDialog"
+    >
+      <div class="dialog-body" style="display:flex;">
+        <div style="flex:4">
+          <el-form :model="addForm" size="small" label-width="140px">
+            <el-collapse v-model="checkCut" accordion>
+              <el-collapse-item title="项目基本信息" name="1">
+                <el-row>
+                  <el-col :sm="24" :md="24">
+                    <el-form-item label="项目名称">
+                      <el-input v-model="addForm.projectName" disabled />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :sm="24" :md="12">
+                    <el-form-item label="项目编号">
+                      <el-input v-model="addForm.projectNo" disabled />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :sm="24" :md="12">
+                    <el-form-item label="业务类型">
+                      <el-input value="非鉴证业务-政务软件服务-软件定制开发" disabled />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :sm="24" :md="12">
+                    <el-form-item label="项目四级分类">
+                      <el-select v-model="addForm.projectType" disabled>
+                        <el-option label="财政评价项目" :value="1">财政评价项目</el-option>
+                        <el-option label="部门评价项目" :value="2">部门评价项目</el-option>
+                      </el-select>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :sm="24" :md="12">
+                    <el-form-item label="风险级别">
+                      <el-input v-model="addForm.riskLevel" disabled />
+                    </el-form-item>
+                  </el-col>
+                  <el-form-item label="预算支出功能分类">
+                    <el-col :span="24">
+                      <el-input v-model="addForm.functionClassify" disabled />
+                    </el-col>
+                  </el-form-item>
+                  <el-form-item label="国民经济行业分类">
+                    <el-col :span="24">
+                      <el-input v-model="addForm.ecoClassify" disabled />
+                    </el-col>
+                  </el-form-item>
+                  <el-col :sm="24" :md="12">
+                    <el-form-item label="项目负责合伙人">
+                      <el-input
+                        v-model="addForm.partner"
+                        disabled="disabled"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :sm="24" :md="12">
+                    <el-form-item label="项目经理">
+                      <el-input
+                        v-model="addForm.projectManager"
+                        disabled="disabled"
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :sm="24" :md="12">
+                    <el-form-item label="项目外勤主管">
+                      <el-input
+                        v-model="addForm.projectOutLeader"
+                        disabled="disabled"
+                      />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </el-collapse-item>
+              <el-collapse-item title="工作档案信息" name="2">
+                <el-row>
+                  <el-col :sm="24" :md="24">
+                    <el-form-item label="工作档案">
+                      <el-radio-group v-model="addForm.workRecord">
+                        <el-radio :label="1">财政部项目</el-radio>
+                        <el-radio :label="2">其他项目</el-radio>
+                      </el-radio-group>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+                <el-row v-if="addForm.workRecord==1">
+                  <el-col :sm="24" :md="12">
+                    <el-form-item label="上传工作档案-财政部项目">
+                      <el-upload
+                        class="upload-demo"
+                        action="https://jsonplaceholder.typicode.com/posts/"
+                        :on-preview="handlePreview"
+                        :on-remove="handleRemove"
+                        :before-remove="beforeRemove"
+                        multiple
+                        :limit="3"
+                        :on-exceed="handleExceed"
+                        :file-list="fileList"
+                      >
+                        <el-button size="small" type="primary">点击上传</el-button>
+                      </el-upload>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+                <el-row v-if="addForm.workRecord==2">
+                  <table class="detail-table">
+                    <tr>
+                      <td>序号</td>
+                      <td>档案类型</td>
+                      <td>档案名称</td>
+                      <td>归档时间</td>
+                      <td>操作</td>
+                    </tr>
+                    <tr>
+                      <td>1</td>
+                      <td>项目承接类</td>
+                      <td>中标通知书.doc</td>
+                      <td>2020-12-12 12:22:10</td>
+                      <td>
+                        <el-button size="mini" type="primary">点击预览</el-button>
+                        <el-button size="mini" type="primary">下载</el-button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td>评价准备类</td>
+                      <td>调研提纲.doc</td>
+                      <td>2020-12-12 12:22:10</td>
+                      <td>
+                        <el-button size="mini" type="primary">点击预览</el-button>
+                        <el-button size="mini" type="primary">下载</el-button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>3</td>
+                      <td>评价过程类—指标体系初步设计资料</td>
+                      <td>初步绩效评价指标体系.doc</td>
+                      <td>2020-12-12 12:22:10</td>
+                      <td>
+                        <el-button size="mini" type="primary">点击预览</el-button>
+                        <el-button size="mini" type="primary">下载</el-button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>4</td>
+                      <td>评价过程类—预调研资料</td>
+                      <td>调研行程安排.doc</td>
+                      <td>2020-12-12 12:22:10</td>
+                      <td>
+                        <el-button size="mini" type="primary">点击预览</el-button>
+                        <el-button size="mini" type="primary">下载</el-button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>5</td>
+                      <td>评价过程类—评价实施资料</td>
+                      <td>绩效评价工作方案.doc</td>
+                      <td>2020-12-12 12:22:10</td>
+                      <td>
+                        <el-button size="mini" type="primary">点击预览</el-button>
+                        <el-button size="mini" type="primary">下载</el-button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>6</td>
+                      <td>评价结果类</td>
+                      <td>绩效评价报告.doc</td>
+                      <td>2020-12-12 12:22:10</td>
+                      <td>
+                        <el-button size="mini" type="primary">点击预览</el-button>
+                        <el-button size="mini" type="primary">下载</el-button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>7</td>
+                      <td>其他类</td>
+                      <td>项目总结表.doc</td>
+                      <td>2020-12-12 12:22:10</td>
+                      <td>
+                        <el-button size="mini" type="primary">点击预览</el-button>
+                        <el-button size="mini" type="primary">下载</el-button>
+                      </td>
+                    </tr>
+                  </table>
+                </el-row>
+              </el-collapse-item>
+              <el-collapse-item title="审批记录信息" name="3">
+                <el-row>
+                  <el-col :sm="24" :md="24">
+                    <table class="detail-table">
+                      <tr>
+                        <td>序号</td>
+                        <td>审批结果</td>
+                        <td>审批意见</td>
+                        <td>审批人</td>
+                        <td>审批时间</td>
+                      </tr>
+                      <tr>
+                        <td>1</td>
+                        <td>通过</td>
+                        <td>同意</td>
+                        <td>李宁</td>
+                        <td>2020-12-02 11:29:39</td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
+                        <td>通过</td>
+                        <td>同意</td>
+                        <td>马辉</td>
+                        <td>2020-12-03 15:49:25</td>
+                      </tr>
+                    </table>
+                  </el-col>
+                </el-row>
+              </el-collapse-item>
+            </el-collapse>
+          </el-form>
+        </div>
+        <div style="flex:2;">
+          <el-row style="text-align:center;">
+            <strong>审批流程节点信息</strong>
+          </el-row>
+          <div class="stepContent">
+            <el-steps direction="vertical" :active="2" finish-status="success">
+              <el-step title="李宁" description="2020-12-02 11:29:39" />
+              <el-step title="马辉" description="2020-12-03 15:49:25" />
+              <el-step title="贾立华" description="" />
+            </el-steps>
+          </div>
+        </div>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="detailShow = false">关 闭</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import { tableListMixin, globalMixin } from '@/utils/mixin'
+export default {
+  name: 'ProjectLedger',
+  mixins: [tableListMixin, globalMixin],
+  data() {
+    return {
+      listQuery: {
+        current: 1,
+        size: 10
+      },
+      partShow: false,
+      checkCut: '2',
+      list: [
+        {
+          projectNo: '2020-07714-01-Z01',
+          projectName: '2020-07714-01-Z01天津市滨海新区财政局-一般公共预算项目绩效评价',
+          clientName: '天津市滨海新区财政局',
+          projectType: 1,
+          projectOutLeader: '李宁',
+          projectPartnerName: '贾立华',
+          projectManager: '马辉',
+          riskLevel: 3,
+          status: 2,
+          approvalTime: '2020-10-09 10:20:10',
+          designMan: '李宁'
+        },
+        {
+          projectNo: '2018-06470-01',
+          projectName: '2018-06470-01-天津市铁路运输检察院-内部控制体系建设',
+          clientName: '天津市铁路运输检察院',
+          projectType: 2,
+          projectOutLeader: '李宛昱',
+          projectPartnerName: '贾立华',
+          projectManager: '马辉',
+          riskLevel: 3,
+          status: 1,
+          approvalTime: '',
+          designMan: ''
+        }
+      ],
+      total: null,
+      addShow: false,
+      addChildShow: false,
+      detailShow: false,
+      title: '',
+      addForm: {
+        workRecord: 2,
+        projectNo: '2018-06470-01',
+        projectName: '2018-06470-01-天津市铁路运输检察院-内部控制体系建设',
+        clientName: '天津市铁路运输检察院',
+        projectType: 1,
+        projectOutLeader: '李宛昱',
+        partner: '贾立华',
+        projectManager: '马辉',
+        projectAid: '李宛昱',
+        functionClassify: '一般公共服务支出-知识产权事务',
+        ecoClassify: '文化、体育和娱乐业-文化艺术业-文艺创作与表演',
+        riskLevel: 'C'
+      }
+    }
+  },
+  methods: {
+  // 获取列表
+    getList() {},
+    // 搜索
+    onSeaech() {},
+    // 重置
+    listQueryReset() {
+    },
+    // 模板下载选择
+    chooseItem() {
+      this.partShow = true
+    },
+    handelAdd() {
+      this.addChildShow = true
+    },
+    handleDetail() {
+      this.detailShow = true
+    },
+    closeDialog() {
+    }
+  }
+}
+</script>
+<style rel="stylesheet/scss" lang="scss" scoped>
+.detail-table tr:first-child{
+  background-color: #F5FAFF;
+}
+</style>

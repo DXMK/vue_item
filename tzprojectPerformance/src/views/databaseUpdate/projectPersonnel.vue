@@ -1,0 +1,351 @@
+<script>
+/*
+ * @Author: Your name
+ * @Date:   2020-12-10 14:46:48
+ * @Last Modified by:   Your name
+ * @Last Modified time: 2020-12-15 18:39:45
+ */
+</script>
+<template>
+  <div class="page-container">
+    <div class="table-list-search">
+      <el-form ref="listQuery" :model="listQuery" inline size="mini">
+        <el-form-item label="所在分所" prop="companyName">
+          <el-input v-model="listQuery.companyName" />
+        </el-form-item>
+        <el-form-item label="所在部门" prop="companyName">
+          <el-input v-model="listQuery.companyName" />
+        </el-form-item>
+        <el-form-item label="所内级别" prop="companyName">
+          <el-input v-model="listQuery.companyName" />
+        </el-form-item>
+        <el-form-item label="员工编号" prop="companyName">
+          <el-input v-model="listQuery.companyName" />
+        </el-form-item>
+        <el-form-item label="员工姓名" prop="companyName">
+          <el-input v-model="listQuery.companyName" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="el-icon-search">查询</el-button>
+          <el-button @click="listQueryReset">重置</el-button>
+        </el-form-item>
+        <!-- <el-form-item class="table-search-button">
+          <el-button type="primary" size="small" icon="el-icon-edit" @click="handelAdd">新增</el-button>
+        </el-form-item> -->
+      </el-form>
+    </div>
+    <!--新增-->
+    <div class="table-list">
+      <el-table
+        v-loading="listLoading"
+        :data="list"
+        border
+        element-loading-text="给我一点时间"
+        fit
+        highlight-current-row
+        stripe
+        header-row-class-name="table-header"
+        size="small"
+        max-height="420"
+        style="width: 100%"
+        @selection-change="handleSelectionChange"
+      >
+        <!-- v-loading="listLoading" -->
+        <el-table-column type="index" :index="typeIndex" label="序号" fixed="left" align="center" />
+        <el-table-column prop="serverBranch" label="所在分所" align="center" />
+        <el-table-column prop="department" label="所在部门" align="center" />
+        <el-table-column prop="level" label="所内级别" align="center" />
+        <el-table-column prop="peopleNo" label="员工编号" align="center" />
+        <el-table-column prop="peopleName" label="姓名" align="center" />
+        <el-table-column prop="academy" label="毕业院校" align="center" />
+        <el-table-column prop="education" label="学历" align="center" />
+        <el-table-column prop="major" label="专业" align="center" />
+        <el-table-column prop="isMain" label="是否为主评人" align="center" />
+        <el-table-column prop="projectType" label="项目类型（业务类型）" align="center" />
+        <el-table-column prop="projectRole" label="曾担任项目角色" align="center" />
+        <el-table-column prop="suffer" label="年限+经验" align="center" />
+        <el-table-column prop="remark" label="备注" align="center" />
+      </el-table>
+    </div>
+    <!-- <div class="pagination-container">
+      <el-pagination
+        background
+        :current-page="listQuery.current"
+        :page-sizes="[10,20,30, 50]"
+        :page-size="listQuery.size"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div> -->
+    <el-dialog
+      width="60%"
+      class="dialog"
+      title="新增"
+      :close-on-click-modal="false"
+      :visible.sync="addShow"
+      @close="closeDialog"
+    >
+      <div class="dialog-body">
+        <el-form
+          :model="addForm"
+          size="small"
+          label-width="120px"
+          :label-position="center"
+        >
+          <el-row>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="所在分所">
+                <el-input />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="所在部门">
+                <el-input />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="所内级别">
+                <el-input />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="员工编号">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="姓名">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="毕业院校">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="学历">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="专业">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="是否为主评人">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="项目类型（业务类型）">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="曾担任项目角色">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="年限+经验">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="备注">
+                <el-input size="small" />
+              </el-form-item>
+            </el-col>
+            <el-col :sm="24" :md="12">
+              <el-form-item label="其他来源">
+                <template>
+                  <el-upload
+                    class="upload-demo"
+                    action="https://jsonplaceholder.typicode.com/posts/"
+                    :on-preview="handlePreview"
+                    :on-remove="handleRemove"
+                    :before-remove="beforeRemove"
+                    multiple
+                    :limit="3"
+                    :on-exceed="handleExceed"
+                    :file-list="fileList"
+                  >
+                    <el-button size="small" type="primary">点击上传</el-button>
+                  </el-upload>
+                </template>
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </el-form>
+      </div>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addShow = false">取 消</el-button>
+        <el-button type="warning" @click="holdSave">暂 存</el-button>
+        <el-button type="primary" @click="submitSave">提 交</el-button>
+      </span>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import { tableListMixin, globalMixin } from '@/utils/mixin'
+export default {
+  name: 'ApprovalApply',
+  mixins: [tableListMixin, globalMixin],
+  data() {
+    return {
+      listQuery: {
+        current: 1,
+        size: 10
+      },
+      parentListQuery: {
+        current: 1,
+        size: 10
+      },
+      list: [{
+        serverBranch: '天津分所',
+        department: '管理咨询部',
+        level: '合伙人',
+        peopleNo: '201406741',
+        peopleName: '王楠',
+        academy: '南开大学',
+        education: '本科',
+        major: '金融学',
+        isMain: '是',
+        projectType: '咨询',
+        projectRole: '项目合伙人',
+        suffer: '10',
+        remark: ''
+      }, {
+        serverBranch: '天津分所',
+        department: '管理咨询部',
+        level: '审计员B',
+        peopleNo: '201766742',
+        peopleName: '李东程',
+        academy: '天津大学',
+        education: '本科',
+        major: '法学',
+        isMain: '否',
+        projectType: '审计',
+        projectRole: '组员',
+        suffer: '2',
+        remark: ''
+      }, {
+        serverBranch: '天津分所',
+        department: '管理咨询部',
+        level: '三级项目经理A',
+        peopleNo: '201606563',
+        peopleName: '刘培培',
+        academy: '河北工业大学',
+        education: '本科',
+        major: '资产评估',
+        isMain: '否',
+        projectType: '咨询',
+        projectRole: '项目经理',
+        suffer: '6',
+        remark: ''
+      }, {
+        serverBranch: '天津分所',
+        department: '管理咨询部',
+        level: '高级审计员B',
+        peopleNo: '201906123',
+        peopleName: '朱小程',
+        academy: '天津市职业大学',
+        education: '本科',
+        major: '工商管理',
+        isMain: '否',
+        projectType: '审计',
+        projectRole: '项目外勤主管',
+        suffer: '4',
+        remark: ''
+      }, {
+        serverBranch: '浙江分所',
+        department: '政务咨询部',
+        level: '审计员A',
+        peopleNo: '201517741',
+        peopleName: '刘美美',
+        academy: '浙江工业大学',
+        education: '本科',
+        major: '审计学',
+        isMain: '否',
+        projectType: '咨询',
+        projectRole: '项目外勤主管',
+        suffer: '7',
+        remark: ''
+      }, {
+        serverBranch: '浙江分所',
+        department: '政务咨询部',
+        level: '审计员B',
+        peopleNo: '201917642',
+        peopleName: '陈泽涛',
+        academy: '浙江财经大学',
+        education: '本科',
+        major: '审计学',
+        isMain: '否',
+        projectType: '咨询',
+        projectRole: '组员',
+        suffer: '3',
+        remark: ''
+      }],
+      total: null,
+      parentTotal: null,
+      addShow: false,
+      addChildShow: false,
+      title: '',
+      addForm: {
+        companyType: 1
+      }
+    }
+  },
+  methods: {
+    // 获取列表
+    getList() {},
+    // 搜索
+    onSeaech() {},
+    // 重置
+    listQueryReset() {
+      this.$refs['listQuery'].resetFields()
+    },
+    handelAdd() {
+      this.title = '新增'
+      this.addShow = true
+      this.addForm.companyType = ''
+    },
+    closeDialog() {
+      this.$refs['addForm'].resetFields()
+    },
+    timeAdd() {
+      console.log(this.addForm.childProjectArr)
+      if (this.addForm.childProjectArr.length > 4) {
+        this.$message({
+          type: 'warning',
+          message: '最多设置5个子项目!'
+        })
+        return false
+      }
+      const timepart = {
+        childProjectName: '',
+        childProjectNo: ''
+      }
+      this.addForm.childProjectArr.push(timepart)
+    },
+    creatChildProject(index, row) {
+      this.addChildShow = true
+    },
+    holdSave() {
+      this.addChildShow = false
+      this.addShow = false
+    },
+    submitSave() {
+      this.addChildShow = false
+      this.addShow = false
+    }
+  }
+}
+</script>
+<style rel="stylesheet/less" lang="less" scoped>
+
+</style>

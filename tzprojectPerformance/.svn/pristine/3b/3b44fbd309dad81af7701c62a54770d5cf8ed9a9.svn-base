@@ -1,0 +1,188 @@
+@import "@/styles/mixin.scss";
+.page-main{
+  background: #fff;
+  border-radius: 50px 0 50px 0;
+}
+
+// 主要页面内外壳
+.page-container{
+  // 对于只有单个列表或其他情况需要上下圆角空白的样式
+  &.need-blank {
+    padding: 50px 0;
+  }
+  &.need-blank-top {
+    padding-top: 50px;
+  }
+  &.need-blank-bottom {
+    padding-bottom: 50px;
+  }
+}
+
+// 页面头部按钮
+.header-operation {
+  padding: 16px 20px;
+  // margin-bottom: 24px;
+}
+
+// 搜索栏
+.table-list-search {
+  padding: 10px 40px 0;
+  // margin-bottom: 24px;
+  border-bottom: 1px solid $blue;
+}
+
+.table-list{
+  .el-table{
+    width: 100%;
+    // max-height: 535px;
+  }
+}
+
+// 统一输入框和选择框宽度
+.zzy-input {
+  width: 178px;
+  max-width: 100%;
+}
+
+// 分页
+.pagination-container {
+  padding: 27px;
+}
+.el-pagination{
+  white-space:pre-wrap;
+}
+// 弹窗内滚动
+.dialog-scroll {
+  max-height: 45vh;
+}
+
+// 弹窗的全屏按钮
+.zzy-dialog-full-screen {
+  position: absolute;
+  top: 20px;
+  right: 46px;
+  padding: 0;
+  background: 0 0;
+  border: none;
+  outline: 0;
+  cursor: pointer;
+  font-size: 16px;
+  color: #909399;
+}
+
+// 表格样式
+.table-header {
+  th {
+    background: #F5FAFF;
+    color: #264288;
+  }
+}
+
+// 一些颜色，及可能用到的单样式
+// .zzy {
+//   &-cup {
+//     cursor: pointer;
+//   }
+
+//   &-color {
+//     &-theme {
+//       color: $themeColor;
+//     }
+  
+//     &-warning {
+//       color: $zzy-color-error;
+//     }
+
+//     &-success {
+//       color: $zzy-color-success;
+//     }
+//   }
+
+//   &-bg {
+//     &-theme {
+//       background: $themeColor;
+//     }
+  
+//     &-warning {
+//       background: $zzy-color-error;
+//     }
+
+//     &-success {
+//       background: $zzy-color-success;
+//     }
+//   }
+// }
+
+// 详情表格
+.detail-table {
+  font-family: verdana, arial, sans-serif;
+  width: 100%;
+  font-size: 14px;
+  word-wrap: break-word;
+  word-break: break-all;
+  color: #333333;
+  border-collapse: collapse;
+  margin-bottom: 1px;
+
+  .title {
+    width: 100px;
+    background: rgba(235, 240, 244, 1);
+  }
+
+  td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+
+    // img {
+    //   width: 80px;
+    //   height: 80px;
+    //   margin: 0 10px 10px 0;
+    // }
+  }
+
+  .el-image-viewer__close{
+    color: #eee;
+  }
+
+  th {
+    border: 1px solid #ddd;
+    text-align: center;
+    font-size: 16px;
+    color: #585A5E;
+    padding: 10px;
+    background: #E1E6EB;
+    min-height: 48px;
+  }
+}
+
+// 弹出框样式
+.el-dialog__header{
+  border-bottom: 1px solid #E0E5EA;
+  min-height: 50px;
+}
+.el-dialog__footer{
+  text-align: center;
+  background: #FAFCFF;
+  border-top: 1px solid #E0E5EA;
+}
+.el-dialog__body{
+      height: 400px;
+      overflow: auto;
+  }
+// 弹出表单中日期选择及选择框的样式
+.addForm {
+  .el-date-editor.el-input{
+    width: 100%;
+  }
+  .el-select{
+    width: 100%;
+  }
+}
+// 详情及其他缩略图
+.detail-thumbnail{
+  width: 100px;
+  height: 100px;
+  margin: 0 10px 10px 0;
+}
+
