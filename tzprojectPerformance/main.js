@@ -4,7 +4,7 @@
  * @Last Modified by:   Your name
  * @Last Modified time: 2021-01-13 17:33:38
  */
-import Vue from 'vue'
+import Vue from 'vue' 
 
 import Cookies from 'js-cookie'
 
